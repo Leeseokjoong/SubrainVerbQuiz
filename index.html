@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>동사 변형 학습 & 객관식 퀴즈 (PWA, TTS 패치)</title>
+<title>동사 변형 학습 & 4지선다 퀴즈 (PWA, TTS 진단)</title>
 
 <!-- PWA -->
 <link rel="manifest" href="manifest.webmanifest">
@@ -61,16 +61,18 @@
   .modal .box{ background:var(--panel); border-radius:20px; padding:20px; width:min(560px,92vw); box-shadow:var(--shadow); }
   .modal h3{ margin:0 0 8px 0; font-size:20px }
   .grid-2{ display:grid; grid-template-columns:1fr 1fr; gap:10px }
-  @media (max-width: 880px){
-    .screens{ grid-template-columns:1fr }
-    .controls{ grid-template-columns:repeat(3,1fr)}
-    .opt .t{ font-size:17px }
-  }
-  @media (max-width: 420px){
-    .opt{ padding:16px }
-    .qopts{ grid-template-columns:1fr; }
-    .word-big{ font-size:36px }
-  }
+
+  /* === 진단 패널 === */
+  .diag-toggle{ display:inline-flex; align-items:center; gap:6px; }
+  .diag{ position:fixed; right:12px; bottom:12px; width:min(560px,95vw); background:var(--panel); border:1px solid #334155; border-radius:16px; box-shadow:var(--shadow); display:none; z-index:60; }
+  .diag.show{ display:block; }
+  .diag .hd{ display:flex; justify-content:space-between; align-items:center; padding:10px 12px; border-bottom:1px solid #2a3650; }
+  .diag .ct{ padding:12px; }
+  .diag .row{ display:flex; flex-wrap:wrap; gap:8px; align-items:center; }
+  .diag .kv{ font-size:12px; color:#cbd5e1; }
+  .diag select, .diag input[type="checkbox"]{ background:#0b1220; color:var(--text); border:1px solid #2a3650; border-radius:8px; padding:8px; }
+  .diag .btn{ padding:8px 10px; border-radius:8px; font-size:12px; }
+  .diag pre{ max-height:180px; overflow:auto; background:#0b1220; border:1px solid #2a3650; padding:8px; border-radius:10px; font-size:12px; color:#e5e7eb; }
 </style>
 </head>
 <body>
@@ -187,6 +189,7 @@
     <div class="left">
       <button class="btn ghost" id="btnReset">초기화</button>
       <button class="btn ghost" id="btnWrongOnly">오답만 풀기</button>
+      <button class="btn ghost diag-toggle" id="btnDiag">🛠 진단</button>
     </div>
     <div class="right small">효과음: <code>audio/correct.mp3</code>, <code>audio/wrong.mp3</code></div>
   </div>
@@ -204,6 +207,49 @@
     <div class="row" style="margin-top:12px; gap:8px; justify-content:flex-end">
       <button class="btn secondary" id="btnModalClose">닫기</button>
       <button class="btn" id="btnModalAction">퀴즈 시작</button>
+    </div>
+  </div>
+</div>
+
+<!-- 진단 패널 -->
+<div class="diag" id="diag">
+  <div class="hd">
+    <div style="font-weight:800">🔧 TTS 진단 패널</div>
+    <div class="row">
+      <button class="btn secondary" id="btnDiagClose">닫기</button>
+    </div>
+  </div>
+  <div class="ct">
+    <div class="row">
+      <div class="kv">voicesReady: <b id="dReady">false</b></div>
+      <div class="kv">ttsWarmed: <b id="dWarmed">false</b></div>
+      <div class="kv">voices: <b id="dCount">0</b>개</div>
+      <div class="kv">선택 보이스: <b id="dChosen">-</b></div>
+    </div>
+    <div class="row" style="margin-top:8px">
+      <label class="kv"><input type="checkbox" id="dOverride" /> 선택한 보이스 강제 사용</label>
+      <select id="dVoice" style="min-width:240px"></select>
+      <button class="btn" id="dRefresh">Refresh voices</button>
+      <button class="btn" id="dWarm">Warmup</button>
+      <button class="btn secondary" id="dStop">Stop/Cancel</button>
+    </div>
+    <div class="row" style="margin-top:8px">
+      <button class="btn" id="dSayHello">샘플 읽기("hello")</button>
+      <button class="btn" id="dSayTriple">현재 카드 3단계 읽기</button>
+      <button class="btn secondary" id="dPlayCorrect">효과음(correct)</button>
+      <button class="btn secondary" id="dPlayWrong">효과음(wrong)</button>
+    </div>
+    <div style="margin-top:8px">
+      <div class="small">보이스 목록</div>
+      <pre id="dVoices"></pre>
+    </div>
+    <div style="margin-top:8px">
+      <div class="small">로그</div>
+      <pre id="dLog"></pre>
+      <div class="row">
+        <button class="btn" id="dCopy">로그 복사</button>
+        <button class="btn secondary" id="dClear">로그 지우기</button>
+      </div>
     </div>
   </div>
 </div>
@@ -404,28 +450,54 @@ function playSnd(isCorrect){
 }
 
 /* =========================================================
-   3-1) TTS 모바일 안정화: 보이스 준비 & 웜업
+   3-1) TTS 모바일 안정화: 보이스 준비 & 웜업 (+진단 훅)
    ========================================================= */
 const speakApi = window.speechSynthesis;
 let voicesReady = false;
 let ttsWarmed = false;
+let voicesChangedCount = 0;
+
+function logDiag(msg){ 
+  const el = $('#dLog'); if(!el) return;
+  const line = `[${new Date().toLocaleTimeString()}] ${msg}`;
+  el.textContent += (el.textContent ? '\n' : '') + line;
+  el.scrollTop = el.scrollHeight;
+}
 
 function waitVoices(timeoutMs=1500){
   return new Promise(resolve=>{
     const have = speakApi && speakApi.getVoices && speakApi.getVoices().length>0;
-    if(have){ voicesReady = true; resolve(true); return; }
+    if(have){ voicesReady = true; updateDiag(); resolve(true); return; }
     let done = false;
     const onChange = ()=>{
       if(done) return;
-      if(speakApi.getVoices().length>0){ done=true; voicesReady=true; speakApi.removeEventListener('voiceschanged', onChange); resolve(true); }
+      if(speakApi.getVoices().length>0){ 
+        done=true; voicesReady=true; voicesChangedCount++; 
+        speakApi.removeEventListener('voiceschanged', onChange); 
+        logDiag('voiceschanged fired; voices=' + speakApi.getVoices().length);
+        updateDiag(); 
+        resolve(true); 
+      }
     };
     speakApi.addEventListener('voiceschanged', onChange, { once:true });
-    setTimeout(()=>{ if(!done){ done=true; voicesReady = speakApi.getVoices().length>0; resolve(voicesReady); } }, timeoutMs);
+    setTimeout(()=>{ 
+      if(!done){ 
+        done=true; voicesReady = speakApi.getVoices().length>0; 
+        logDiag('voices load timeout; voices=' + speakApi.getVoices().length); 
+        updateDiag(); 
+        resolve(voicesReady); 
+      } 
+    }, timeoutMs);
   });
 }
 function pickEnglishVoice(){
   const vs = (speakApi && speakApi.getVoices) ? speakApi.getVoices() : [];
-  // en-US 여성/영어 우선
+  // 진단에서 보이스 강제 지정시 그 보이스 우선
+  if($('#dOverride')?.checked){
+    const sel = $('#dVoice');
+    const idx = sel ? Number(sel.value) : -1;
+    if(!isNaN(idx) && vs[idx]) return vs[idx];
+  }
   let v = vs.find(v=>/en-US/i.test(v.lang) && /female|samantha|zoe|allison|aria|female/i.test(v.name));
   if(!v) v = vs.find(v=>/en-US/i.test(v.lang));
   if(!v) v = vs.find(v=>/en/i.test(v.lang));
@@ -441,13 +513,14 @@ async function warmupTTS(){
     u.rate = 1.0; u.pitch = 1.0; u.lang = "en-US";
     const v = pickEnglishVoice(); if(v) u.voice = v;
     return new Promise(res=>{
-      u.onend = ()=>{ ttsWarmed = true; res(); };
+      u.onend = ()=>{ ttsWarmed = true; updateDiag(); logDiag('warmup onend'); res(); };
       // iOS에서 onend 안 오는 경우 대비 타임아웃
-      setTimeout(()=>{ if(!ttsWarmed){ ttsWarmed = true; res(); } }, 400);
+      setTimeout(()=>{ if(!ttsWarmed){ ttsWarmed = true; updateDiag(); logDiag('warmup timeout'); res(); } }, 400);
       speakApi.cancel();
+      logDiag('warmup speak()');
       speakApi.speak(u);
     });
-  }catch(e){ ttsWarmed = true; }
+  }catch(e){ ttsWarmed = true; updateDiag(); logDiag('warmup error: '+e); }
 }
 
 /* =========================================================
@@ -493,7 +566,7 @@ function buildSets(){
 }
 
 /* =========================================================
-   6) 학습(읽어주기) + 뜻 표시 (TTS 패치)
+   6) 학습(읽어주기) + 뜻 표시 (TTS 패치 + 로그)
    ========================================================= */
 function highlight(which){
   ['Base','Past','PP'].forEach(k => $('#p'+k).classList.remove('hl'));
@@ -505,7 +578,8 @@ function stopSpeak(){
   try{
     if(lastUtters.length){ lastUtters.forEach(u=>u.onend=null); lastUtters=[]; }
     if(window.speechSynthesis) speechSynthesis.cancel();
-  }catch(e){}
+    logDiag('speechSynthesis.cancel()');
+  }catch(e){ logDiag('stopSpeak error: '+e); }
 }
 function showStudyCard(){
   if(currentSet.length===0){ $('#bWord').textContent='(빈 세트)'; return; }
@@ -521,7 +595,7 @@ function showStudyCard(){
 
 // 모바일 안정화를 위한 async speak
 async function speakTriple(v, rate=1.0, thenAuto=false){
-  if(!window.speechSynthesis) return;
+  if(!window.speechSynthesis){ logDiag('no speechSynthesis'); return; }
 
   // 보이스 준비 + 웜업 (사용자 클릭 안에서 호출됨)
   await warmupTTS();
@@ -529,6 +603,7 @@ async function speakTriple(v, rate=1.0, thenAuto=false){
 
   // 발화 설정
   const voice = pickEnglishVoice();
+  $('#dChosen').textContent = voice ? `${voice.name} (${voice.lang})` : '-';
 
   // 큐 초기화 및 아주 짧은 지연
   stopSpeak();
@@ -541,11 +616,14 @@ async function speakTriple(v, rate=1.0, thenAuto=false){
   [u1,u2,u3].forEach(u=>{
     u.rate = rate; u.pitch = 1; u.lang = "en-US";
     if(voice) u.voice = voice;
+    u.onstart = ()=> logDiag('onstart: '+u.text);
+    u.onerror = (e)=> logDiag('onerror: '+(e?.error||'unknown'));
+    u.onend = ()=> logDiag('onend: '+u.text);
   });
 
-  u1.onstart = ()=>highlight('base');
-  u2.onstart = ()=>highlight('past');
-  u3.onstart = ()=>highlight('pp');
+  u1.onstart = ()=>{ highlight('base'); logDiag('start base'); };
+  u2.onstart = ()=>{ highlight('past'); logDiag('start past'); };
+  u3.onstart = ()=>{ highlight('pp'); logDiag('start pp'); };
   u3.onend = async ()=>{
     highlight('none');
     if($('#autoNext').checked && thenAuto){
@@ -554,7 +632,6 @@ async function speakTriple(v, rate=1.0, thenAuto=false){
         onStudyComplete();
       }else{
         showStudyCard();
-        // 자동다음도 보이스 준비 후 다시 말하기
         await sleep(150);
         speakTriple(currentSet[iStudy], parseFloat($('#rate').value), true);
       }
@@ -563,12 +640,11 @@ async function speakTriple(v, rate=1.0, thenAuto=false){
   };
 
   lastUtters=[u1,u2,u3];
-  // iOS 일부에서 연속 speak가 끊기는 문제를 피하려고 약간의 간격을 둠
-  speechSynthesis.speak(u1);
+  logDiag('speak: '+u1.text); speechSynthesis.speak(u1);
   await sleep(20);
-  speechSynthesis.speak(u2);
+  logDiag('speak: '+u2.text); speechSynthesis.speak(u2);
   await sleep(20);
-  speechSynthesis.speak(u3);
+  logDiag('speak: '+u3.text); speechSynthesis.speak(u3);
 }
 
 function onStudyComplete(){
@@ -838,7 +914,8 @@ $('#btnWrongOnly').addEventListener('click', ()=>{
   patternTotals = {AAA:0, ABB:0, ABA:0, ABC:0, REG:0};
   patternCorrect = {AAA:0, ABB:0, ABA:0, ABC:0, REG:0};
   currentSet.forEach(v => patternTotals[v.pattern]++);
-  setIndex = 0; ok=0; no=0; qi=0; history=[]; wrongList=[];
+  setIndex = 0; ok=0; no=0; qi=0; history=[];
+  wrongList=[];
   qOrder = shuffle([...currentSet.keys()]);
   setMode('quiz'); showQuizCard(); updateStats();
 });
@@ -857,7 +934,74 @@ function showModal(title, bodyHTML, actionText, actionFn){
 function hideModal(){ $('#modal').classList.remove('show'); }
 
 /* =========================================================
-   12) 시작 + SW 등록
+   12) 진단 패널 로직
+   ========================================================= */
+function formatVoices(){
+  const vs = (speechSynthesis && speechSynthesis.getVoices) ? speechSynthesis.getVoices() : [];
+  const lines = vs.map((v,i)=> `${i}. ${v.name}  [${v.lang}]  ${v.default ? '(default)' : ''}`).join('\n');
+  $('#dVoices').textContent = lines || '(보이스 없음)';
+  $('#dCount').textContent = String(vs.length);
+  const sel = $('#dVoice'); if(!sel) return;
+  sel.innerHTML = vs.map((v,i)=> `<option value="${i}">${i}. ${v.name} [${v.lang}] ${v.default?'(default)':''}</option>`).join('');
+}
+function updateDiag(){
+  $('#dReady').textContent = String(voicesReady);
+  $('#dWarmed').textContent = String(ttsWarmed);
+  formatVoices();
+}
+function openDiag(){ $('#diag').classList.add('show'); updateDiag(); }
+function closeDiag(){ $('#diag').classList.remove('show'); }
+
+$('#btnDiag').addEventListener('click', openDiag);
+$('#btnDiagClose').addEventListener('click', closeDiag);
+$('#dRefresh').addEventListener('click', async ()=>{ 
+  logDiag('manual refresh voices'); 
+  await waitVoices(1000); 
+  updateDiag(); 
+});
+$('#dWarm').addEventListener('click', async ()=>{ 
+  logDiag('manual warmup'); 
+  await warmupTTS(); 
+  updateDiag(); 
+});
+$('#dStop').addEventListener('click', stopSpeak);
+$('#dSayHello').addEventListener('click', async ()=>{
+  await warmupTTS(); await waitVoices(1000);
+  const v = pickEnglishVoice();
+  const u = new SpeechSynthesisUtterance('hello');
+  u.lang = 'en-US'; u.pitch = 1; u.rate = 1;
+  if(v) u.voice = v;
+  u.onstart = ()=>logDiag('hello onstart');
+  u.onend = ()=>logDiag('hello onend');
+  u.onerror = (e)=>logDiag('hello onerror: ' + (e?.error||'unknown'));
+  speechSynthesis.speak(u);
+});
+$('#dSayTriple').addEventListener('click', async ()=>{
+  if(!currentSet.length){ logDiag('no currentSet'); return; }
+  const v = currentSet[iStudy];
+  await speakTriple(v, parseFloat($('#rate').value)||1.0, false);
+});
+$('#dPlayCorrect').addEventListener('click', ()=>{ try{$('#sndCorrect').currentTime=0; $('#sndCorrect').play();}catch(_){} });
+$('#dPlayWrong').addEventListener('click', ()=>{ try{$('#sndWrong').currentTime=0; $('#sndWrong').play();}catch(_){} });
+$('#dCopy').addEventListener('click', async ()=>{
+  try{
+    await navigator.clipboard.writeText($('#dLog').textContent || '');
+    alert('복사됐습니다.');
+  }catch(e){ alert('클립보드 접근 실패'); }
+});
+$('#dClear').addEventListener('click', ()=> $('#dLog').textContent='');
+
+/* voiceschanged 이벤트: 진단 표시 업데이트 */
+if(window.speechSynthesis){
+  speechSynthesis.addEventListener('voiceschanged', ()=>{
+    voicesChangedCount++;
+    logDiag('voiceschanged (global); count=' + speechSynthesis.getVoices().length);
+    updateDiag();
+  });
+}
+
+/* =========================================================
+   13) 시작 + SW 등록
    ========================================================= */
 window.addEventListener('DOMContentLoaded', ()=>{
   $('#spdTxt').textContent = $('#rate').value;
@@ -865,8 +1009,8 @@ window.addEventListener('DOMContentLoaded', ()=>{
   setMode('study');
   showStudyCard();
   updateStats();
+  updateDiag();
 
-  // PWA SW 등록
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('./service-worker.js').catch(()=>{});
   }
