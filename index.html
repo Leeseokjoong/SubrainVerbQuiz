@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>동사 변형 학습 & 4지선다 퀴즈 (PWA)</title>
+<title>동사 변형 학습 & 객관식 퀴즈 (PWA, TTS 패치)</title>
 
 <!-- PWA -->
 <link rel="manifest" href="manifest.webmanifest">
@@ -68,7 +68,7 @@
   }
   @media (max-width: 420px){
     .opt{ padding:16px }
-    .qopts{ grid-template-columns:1fr; } /* 초소형에서는 한 줄씩 */
+    .qopts{ grid-template-columns:1fr; }
     .word-big{ font-size:36px }
   }
 </style>
@@ -210,6 +210,15 @@
 
 <script>
 /* =========================================================
+   0) 공통 도우미
+   ========================================================= */
+const $ = s => document.querySelector(s);
+const $$ = s => document.querySelectorAll(s);
+const shuffle = arr => { for(let i=arr.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [arr[i],arr[j]]=[arr[j],arr[i]]; } return arr; };
+const clamp = (n,min,max)=> Math.max(min, Math.min(max, n));
+const sleep = (ms)=> new Promise(res=>setTimeout(res, ms));
+
+/* =========================================================
    1) 의미(국문) 사전
    ========================================================= */
 const KR = {
@@ -235,7 +244,7 @@ const KR = {
   wake:"깨다/깨우다", wear:"입다/착용하다", tear:"찢다", shake:"흔들다", freeze:"얼다/얼리다",
   bite:"물다", blow:"불다", grow:"자라다/기르다", know:"알다", throw:"던지다",
   show:"보여주다", prove:"증명하다", sew:"바느질하다", be:"~이다/있다", do:"하다",
-  // REG (대표적인 의미들)
+  // REG (대표)
   walk:"걷다", work:"일하다", play:"놀다/연주하다", use:"사용하다", call:"전화하다/부르다", look:"보다",
   ask:"묻다/요청하다", need:"필요하다", move:"움직이다/이사하다", live:"살다", help:"돕다", talk:"말하다",
   turn:"돌다/돌리다", start:"시작하다", stop:"멈추다", plan:"계획하다", open:"열다", close:"닫다",
@@ -356,19 +365,34 @@ for(const b of REG_BASES){
 const VERBS = RAW.slice(0, 210);
 
 /* =========================================================
-   3) 상태 & 유틸
+   3) 상태 & 오디오/TTS 준비
    ========================================================= */
-const $ = s => document.querySelector(s);
-const $$ = s => document.querySelectorAll(s);
-const shuffle = arr => { for(let i=arr.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [arr[i],arr[j]]=[arr[j],arr[i]]; } return arr; };
-const clamp = (n,min,max)=> Math.max(min, Math.min(max, n));
+let setSize = 20;
+let setIndex = 0;
+let currentSet = [];
+let mode = 'study';
 
-// 오디오 언락
+let iStudy = 0;
+let lastUtters = [];
+
+let qOrder = [];
+let qi = 0;
+let ok=0, no=0;
+let wrongList = [];
+let history = [];
+let qLocked = false;
+
+let patternTotals = {AAA:0, ABB:0, ABA:0, ABC:0, REG:0};
+let patternCorrect = {AAA:0, ABB:0, ABA:0, ABC:0, REG:0};
+
+// 효과음: 첫 터치 언락
 function unlockAudioOnce() {
   ["sndCorrect","sndWrong"].forEach(id => {
     const a = document.getElementById(id); if(!a) return;
     a.muted = true; a.play().then(()=>{ a.pause(); a.currentTime=0; a.muted=false; }).catch(()=>{});
   });
+  // TTS 웜업도 함께
+  warmupTTS().catch(()=>{});
   window.removeEventListener("pointerdown", unlockAudioOnce);
 }
 window.addEventListener("pointerdown", unlockAudioOnce, { once:true });
@@ -379,29 +403,56 @@ function playSnd(isCorrect){
   if(!el) return; try{ el.currentTime = 0; el.play(); }catch(e){}
 }
 
-// 진행 관련
-let setSize = 20;
-let setIndex = 0;
-let currentSet = [];
-let mode = 'study'; // 'study' | 'quiz'
+/* =========================================================
+   3-1) TTS 모바일 안정화: 보이스 준비 & 웜업
+   ========================================================= */
+const speakApi = window.speechSynthesis;
+let voicesReady = false;
+let ttsWarmed = false;
 
-// 학습
-let iStudy = 0;
-let lastUtters = [];
+function waitVoices(timeoutMs=1500){
+  return new Promise(resolve=>{
+    const have = speakApi && speakApi.getVoices && speakApi.getVoices().length>0;
+    if(have){ voicesReady = true; resolve(true); return; }
+    let done = false;
+    const onChange = ()=>{
+      if(done) return;
+      if(speakApi.getVoices().length>0){ done=true; voicesReady=true; speakApi.removeEventListener('voiceschanged', onChange); resolve(true); }
+    };
+    speakApi.addEventListener('voiceschanged', onChange, { once:true });
+    setTimeout(()=>{ if(!done){ done=true; voicesReady = speakApi.getVoices().length>0; resolve(voicesReady); } }, timeoutMs);
+  });
+}
+function pickEnglishVoice(){
+  const vs = (speakApi && speakApi.getVoices) ? speakApi.getVoices() : [];
+  // en-US 여성/영어 우선
+  let v = vs.find(v=>/en-US/i.test(v.lang) && /female|samantha|zoe|allison|aria|female/i.test(v.name));
+  if(!v) v = vs.find(v=>/en-US/i.test(v.lang));
+  if(!v) v = vs.find(v=>/en/i.test(v.lang));
+  return v || null;
+}
+async function warmupTTS(){
+  if(ttsWarmed) return;
+  if(!window.speechSynthesis) return;
+  await waitVoices(1500); // 가능하면 보이스 로드
+  try{
+    const u = new SpeechSynthesisUtterance("a"); // 아주 짧은 발화
+    u.volume = 0.0; // 무음 웜업
+    u.rate = 1.0; u.pitch = 1.0; u.lang = "en-US";
+    const v = pickEnglishVoice(); if(v) u.voice = v;
+    return new Promise(res=>{
+      u.onend = ()=>{ ttsWarmed = true; res(); };
+      // iOS에서 onend 안 오는 경우 대비 타임아웃
+      setTimeout(()=>{ if(!ttsWarmed){ ttsWarmed = true; res(); } }, 400);
+      speakApi.cancel();
+      speakApi.speak(u);
+    });
+  }catch(e){ ttsWarmed = true; }
+}
 
-// 퀴즈
-let qOrder = [];
-let qi = 0;
-let ok=0, no=0;
-let wrongList = [];
-let history = [];
-let qLocked = false;
-
-// 패턴 통계
-let patternTotals = {AAA:0, ABB:0, ABA:0, ABC:0, REG:0};
-let patternCorrect = {AAA:0, ABB:0, ABA:0, ABC:0, REG:0};
-
-// 진행바/통계
+/* =========================================================
+   4) 진행바/통계
+   ========================================================= */
 function updateStats(){
   const total = currentSet.length;
   const done = (mode==='quiz') ? (ok+no) : iStudy;
@@ -415,7 +466,7 @@ function updateStats(){
 }
 
 /* =========================================================
-   4) 세트 구성/필터
+   5) 세트 구성/필터
    ========================================================= */
 function buildSets(){
   setSize = parseInt($('#setSize').value,10)||20;
@@ -430,24 +481,20 @@ function buildSets(){
 
   currentSet = list.slice(setIndex*setSize, setIndex*setSize + setSize);
 
-  // 패턴 통계 초기화
   patternTotals = {AAA:0, ABB:0, ABA:0, ABC:0, REG:0};
   patternCorrect = {AAA:0, ABB:0, ABA:0, ABC:0, REG:0};
   currentSet.forEach(v => patternTotals[v.pattern]++);
 
-  // 학습 초기화
   iStudy = 0; stopSpeak(); showStudyCard();
 
-  // 퀴즈 초기화
   ok = 0; no = 0; wrongList=[]; history=[];
   qi = 0; qOrder = shuffle([...currentSet.keys()]);
   showQuizCard(); updateStats();
 }
 
 /* =========================================================
-   5) 학습(읽어주기) + 뜻 표시
+   6) 학습(읽어주기) + 뜻 표시 (TTS 패치)
    ========================================================= */
-const speakApi = window.speechSynthesis;
 function highlight(which){
   ['Base','Past','PP'].forEach(k => $('#p'+k).classList.remove('hl'));
   if(which==='base') $('#pBase').classList.add('hl');
@@ -457,7 +504,7 @@ function highlight(which){
 function stopSpeak(){
   try{
     if(lastUtters.length){ lastUtters.forEach(u=>u.onend=null); lastUtters=[]; }
-    speakApi.cancel();
+    if(window.speechSynthesis) speechSynthesis.cancel();
   }catch(e){}
 }
 function showStudyCard(){
@@ -471,21 +518,35 @@ function showStudyCard(){
   highlight('none');
   $('#promptTag').textContent = '학습 카드';
 }
-function speakTriple(v, rate=1.0, thenAuto=false){
+
+// 모바일 안정화를 위한 async speak
+async function speakTriple(v, rate=1.0, thenAuto=false){
   if(!window.speechSynthesis) return;
+
+  // 보이스 준비 + 웜업 (사용자 클릭 안에서 호출됨)
+  await warmupTTS();
+  await waitVoices(1200);
+
+  // 발화 설정
+  const voice = pickEnglishVoice();
+
+  // 큐 초기화 및 아주 짧은 지연
   stopSpeak();
-  const voices = speakApi.getVoices();
-  const voice = voices.find(v=>/en/i.test(v.lang) && /female|us|uk/i.test(v.name)) || voices.find(v=>/en/i.test(v.lang)) || voices[0] || null;
+  await sleep(60);
 
   const u1 = new SpeechSynthesisUtterance(v.base);
   const u2 = new SpeechSynthesisUtterance(v.past.replace('/', ' or '));
   const u3 = new SpeechSynthesisUtterance(v.pp);
-  [u1,u2,u3].forEach(u=>{ u.rate = rate; if(voice) u.voice = voice; u.pitch = 1; });
+
+  [u1,u2,u3].forEach(u=>{
+    u.rate = rate; u.pitch = 1; u.lang = "en-US";
+    if(voice) u.voice = voice;
+  });
 
   u1.onstart = ()=>highlight('base');
   u2.onstart = ()=>highlight('past');
   u3.onstart = ()=>highlight('pp');
-  u3.onend = ()=>{
+  u3.onend = async ()=>{
     highlight('none');
     if($('#autoNext').checked && thenAuto){
       iStudy++;
@@ -493,23 +554,31 @@ function speakTriple(v, rate=1.0, thenAuto=false){
         onStudyComplete();
       }else{
         showStudyCard();
-        setTimeout(()=>speakTriple(currentSet[iStudy], parseFloat($('#rate').value), true), 250);
+        // 자동다음도 보이스 준비 후 다시 말하기
+        await sleep(150);
+        speakTriple(currentSet[iStudy], parseFloat($('#rate').value), true);
       }
       updateStats();
     }
   };
+
   lastUtters=[u1,u2,u3];
-  speakApi.speak(u1); speakApi.speak(u2); speakApi.speak(u3);
+  // iOS 일부에서 연속 speak가 끊기는 문제를 피하려고 약간의 간격을 둠
+  speechSynthesis.speak(u1);
+  await sleep(20);
+  speechSynthesis.speak(u2);
+  await sleep(20);
+  speechSynthesis.speak(u3);
 }
+
 function onStudyComplete(){
-  // 음성 없음 — 텍스트 모달만
   showModal("수고하셨습니다!","이제 퀴즈를 풀어보세요. 아래 버튼을 누르면 객관식 퀴즈가 시작됩니다.","퀴즈 시작",()=>{
     setMode('quiz'); startQuizFresh();
   });
 }
 
 /* =========================================================
-   6) 퀴즈 — 근사오답 생성기
+   7) 퀴즈 — 근사오답 생성기
    ========================================================= */
 const VOWELS = "aeiou";
 const isVowel = ch => VOWELS.includes(ch);
@@ -544,17 +613,17 @@ function nearMissAAA(base,past,pp){
   ];
 }
 function nearMissABB(base,past,pp){
-  const d1 = regularize(base); // keeped
-  const d2 = past + "ed";      // kepted
+  const d1 = regularize(base);
+  const d2 = past + "ed";
   return [
     {base, past:d1, pp:d1, ok:false},
-    {base, past:past, pp:base, ok:false}, // swap(PP를 base로 착각)
+    {base, past:past, pp:base, ok:false},
     {base, past: d2===past? smallVowelMutate(d2):d2, pp: d2===pp? smallVowelMutate(d2):d2, ok:false}
   ];
 }
 function nearMissABA(base,past,pp){
-  const d1 = regularize(base);      // runned
-  const d2 = {past:base, pp:past};  // run–run–ran
+  const d1 = regularize(base);
+  const d2 = {past:base, pp:past};
   const d3p = smallVowelMutate(past);
   return [
     {base, past:d1, pp:d1, ok:false},
@@ -563,9 +632,9 @@ function nearMissABA(base,past,pp){
   ];
 }
 function nearMissABC(base,past,pp){
-  const d1 = {past:past, pp:past};   // drank–drank
-  const d2 = {past:pp,   pp:pp};     // drunk–drunk
-  const d3 = {past:regularize(base), pp:pp}; // drinked–drunk
+  const d1 = {past:past, pp:past};
+  const d2 = {past:pp,   pp:pp};
+  const d3 = {past:regularize(base), pp:pp};
   return [
     {base, past:d1.past, pp:d1.pp, ok:false},
     {base, past:d2.past, pp:d2.pp, ok:false},
@@ -574,7 +643,6 @@ function nearMissABC(base,past,pp){
 }
 function nearMissREG(base,past,pp){
   let d1 = past.replace(/ed$/,"ked"); if(d1===past) d1 = past + past.slice(-1);
-  let d2 = base.endsWith("y") && isVowel(base.at(-2)) ? base.slice(0,-1)+"aied" : base+"t";
   return [
     {base, past:d1, pp:d1, ok:false},
     {base, past: base+"ed", pp: base+"t", ok:false},
@@ -608,7 +676,7 @@ function makeNearMissOptions(v){
 }
 
 /* =========================================================
-   7) 퀴즈 카드 (선지 라벨 제거)
+   8) 퀴즈 카드
    ========================================================= */
 function showQuizCard(){
   $('#promptTag').textContent = '퀴즈';
@@ -650,7 +718,6 @@ function showQuizCard(){
 
   const idxSet = qOrder[qi];
   const v = currentSet[idxSet];
-
   $('#qBase').textContent = v.base;
 
   const opts = makeNearMissOptions(v);
@@ -659,7 +726,7 @@ function showQuizCard(){
   opts.forEach((o)=>{
     const div = document.createElement('div');
     div.className = 'opt';
-    div.innerHTML = `<div class="t">${o.base} – ${o.past} – ${o.pp}</div>`; /* ← 선지 번호 제거 */
+    div.innerHTML = `<div class="t">${o.base} – ${o.past} – ${o.pp}</div>`;
     div.addEventListener('click', ()=>{
       if(qLocked) return;
       qLocked = true;
@@ -675,7 +742,7 @@ function showQuizCard(){
       updateStats();
       playSnd(wasCorrect);
 
-      qi++;           // 즉시 다음 문제
+      qi++;
       showQuizCard();
     });
     box.appendChild(div);
@@ -685,7 +752,7 @@ function showQuizCard(){
 }
 
 /* =========================================================
-   8) 렌더링 보조
+   9) 렌더링 보조
    ========================================================= */
 function renderHistory(){
   const box = $('#history'); box.innerHTML='';
@@ -705,7 +772,7 @@ function renderWrongs(){
 }
 
 /* =========================================================
-   9) 화면 전환 / 이벤트
+   10) 화면 전환 / 이벤트
    ========================================================= */
 function setMode(m){
   mode = m;
@@ -733,16 +800,16 @@ $('#setSize').addEventListener('change', ()=>{ setIndex=0; buildSets(); });
 $('#patternFilter').addEventListener('change', ()=>{ setIndex=0; buildSets(); });
 $('#rate').addEventListener('input', e=> $('#spdTxt').textContent = e.target.value);
 
-// 학습 버튼
-$('#btnPlay').addEventListener('click', ()=>{
+// 학습 버튼 (클릭 제스처 안에서 speakTriple 호출)
+$('#btnPlay').addEventListener('click', async ()=>{
   if(currentSet.length===0) return;
   const v = currentSet[iStudy];
-  speakTriple(v, parseFloat($('#rate').value), false);
+  await speakTriple(v, parseFloat($('#rate').value), false);
 });
-$('#btnRepeat').addEventListener('click', ()=>{
+$('#btnRepeat').addEventListener('click', async ()=>{
   if(currentSet.length===0) return;
   const v = currentSet[iStudy];
-  speakTriple(v, parseFloat($('#rate').value), true);
+  await speakTriple(v, parseFloat($('#rate').value), true);
 });
 $('#btnStop').addEventListener('click', stopSpeak);
 $('#btnNext').addEventListener('click', ()=>{
@@ -777,7 +844,7 @@ $('#btnWrongOnly').addEventListener('click', ()=>{
 });
 
 /* =========================================================
-   10) 모달
+   11) 모달
    ========================================================= */
 function showModal(title, bodyHTML, actionText, actionFn){
   $('#modalTitle').textContent = title;
@@ -790,7 +857,7 @@ function showModal(title, bodyHTML, actionText, actionFn){
 function hideModal(){ $('#modal').classList.remove('show'); }
 
 /* =========================================================
-   11) 시작 + SW 등록
+   12) 시작 + SW 등록
    ========================================================= */
 window.addEventListener('DOMContentLoaded', ()=>{
   $('#spdTxt').textContent = $('#rate').value;
@@ -799,6 +866,7 @@ window.addEventListener('DOMContentLoaded', ()=>{
   showStudyCard();
   updateStats();
 
+  // PWA SW 등록
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('./service-worker.js').catch(()=>{});
   }
