@@ -422,7 +422,16 @@ $("#btnRepeat").onclick=()=>{ if(currentSet.length) speakTriple(currentSet[iStud
 $("#btnStop").onclick=()=>speechSynthesis.cancel();
 $("#btnNext").onclick=()=>{ speechSynthesis.cancel(); iStudy++; if(iStudy>=currentSet.length) onStudyComplete(); else showStudyCard(); updateStats(); };
 $("#btnPrev").onclick=()=>{ speechSynthesis.cancel(); iStudy=Math.max(iStudy-1,0); showStudyCard(); updateStats(); };
-$("#btnStartStudy").onclick=()=>{ setMode("study"); iStudy=0; showStudyCard(); updateStats(); };
+$("#btnStartStudy").onclick=()=>{
+  setMode("study");
+  iStudy=0;
+  showStudyCard();
+  updateStats();
+  // 시작 즉시 읽기 (자동다음 체크 시 자동 진행)
+  if(currentSet.length){
+    speakTriple(currentSet[iStudy], parseFloat($("#rate").value), $("#autoNext").checked);
+  }
+};
 $("#btnStartQuiz").onclick=()=>startQuizFresh();
 $("#btnNextSet").onclick=()=>{ setIndex++; buildSets(); setMode($("#mode").value); };
 $("#btnReset").onclick=()=>{ setIndex=0; buildSets(); setMode("study"); };
@@ -446,3 +455,4 @@ window.addEventListener("DOMContentLoaded",()=>{ buildSets(); setMode("study"); 
 </script>
 </body>
 </html>
+
