@@ -1,15 +1,21 @@
 {
-    "name": "동사 변형 학습 & 4지선다 퀴즈",
-    "short_name": "동사변형퀴즈",
-    "description": "현재형-과거형-과거분사형 학습 & 근사오답 4지선다 퀴즈 (PWA)",
-    "start_url": ".",
-    "scope": ".",
-    "display": "standalone",
-    "background_color": "#0f172a",
-    "theme_color": "#0f172a",
-    "icons": [
-      { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
-      { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png" }
-    ]
-  }
-  
+  "name": "동사 변형 학습 & 4지선다 퀴즈",
+  "short_name": "VerbQuiz",
+  "description": "영어 불규칙 동사 학습과 4지선다 퀴즈 프로그램",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#0f172a",
+  "theme_color": "#0f172a",
+  "icons": [
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
