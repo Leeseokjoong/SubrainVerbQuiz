@@ -10,159 +10,153 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
 
   <style>
-    :root{
-      --bg:#0f172a;
-      --card:#111827;
-      --panel:#1f2937;
-      --text:#e5e7eb;
-      --muted:#9ca3af;
-      --blue:#3b82f6;
-      --green:#22c55e;
-      --red:#ef4444;
-      --amber:#f59e0b;
-      --radius:16px;
-      --shadow:0 6px 18px rgba(0,0,0,.35);
-    }
+    :root{--bg:#0f172a;--card:#111827;--panel:#1f2937;--text:#e5e7eb;--muted:#9ca3af;
+      --blue:#3b82f6;--amber:#f59e0b;--radius:16px;--shadow:0 6px 18px rgba(0,0,0,.35);}
     *{box-sizing:border-box;}
-    body{
-      margin:0;
-      font-family:"Noto Sans KR",system-ui,-apple-system,Segoe UI,Roboto,"Apple SD Gothic Neo","Malgun Gothic",Arial,sans-serif;
-      background:var(--bg);
-      color:var(--text);
-      min-height:100svh;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-    }
-    .app{width:min(1000px,94vw);height:min(760px,94svh);display:grid;gap:12px;grid-template-rows:auto auto 1fr auto;}
+    body{margin:0;font-family:"Noto Sans KR",system-ui,sans-serif;background:var(--bg);color:var(--text);
+      min-height:100vh;display:flex;align-items:center;justify-content:center;}
+    .app{width:min(1000px,94vw);height:min(760px,94vh);display:grid;gap:12px;grid-template-rows:auto auto 1fr auto;}
     .topbar{display:flex;align-items:center;justify-content:space-between;}
-    .brand{font-weight:800;font-size:20px;letter-spacing:.2px;}
+    .brand{font-weight:800;font-size:20px;}
     .stats{font-size:14px;color:var(--muted);}
     .panel{background:var(--panel);border-radius:var(--radius);box-shadow:var(--shadow);padding:12px;}
     .controls{display:grid;gap:8px;grid-template-columns:repeat(6,1fr);}
-    .controls label{font-size:12px;color:var(--muted);display:block;margin-bottom:4px;}
-    .controls select,.controls input[type="checkbox"],.controls input[type="range"]{width:100%;background:#0b1220;color:var(--text);border:1px solid #263247;border-radius:10px;padding:9px 10px;outline:none;}
-    .controls .row{display:flex;align-items:center;gap:8px;}
-    .progress{display:flex;align-items:center;gap:10px;margin-top:10px;}
-    .bar{position:relative;flex:1;height:12px;background:#0b1220;border:1px solid #263247;border-radius:999px;overflow:hidden;}
+    .controls label{font-size:12px;color:var(--muted);}
+    .controls select,.controls input[type="checkbox"],.controls input[type="range"]{
+      width:100%;background:#0b1220;color:var(--text);border:1px solid #263247;border-radius:10px;padding:8px;}
+    .progress{display:flex;gap:10px;margin-top:10px;}
+    .bar{flex:1;height:12px;background:#0b1220;border:1px solid #263247;border-radius:999px;overflow:hidden;}
     .bar>i{display:block;height:100%;width:0%;background:linear-gradient(90deg,#2563eb,#22c55e);}
     .screens{display:flex;flex-direction:column;gap:12px;}
-    .screens .card{width:100%;}
-    .screens .right{width:100%;margin-top:16px;}
-    .card{background:var(--card);border-radius:var(--radius);padding:16px;box-shadow:var(--shadow);display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;}
-    .prompt-tag{font-size:12px;color:var(--muted);border:1px dashed #334155;padding:2px 8px;border-radius:999px;margin-bottom:8px;}
-    .word-big{font-size:64px;font-weight:900;letter-spacing:.3px;margin:12px 0 10px;}
-    .triple{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;margin:4px 0 6px;}
-    .pill{padding:12px 18px;border-radius:999px;background:#0b1220;border:1px solid #2a3650;font-weight:700;font-size:22px;}
-    .pill.hl{outline:2px solid var(--blue);}
-    .mean{margin-top:16px;font-size:28px;color:#e2e8f0;}
-    .btn{border:0;border-radius:14px;padding:16px 24px;font-weight:700;cursor:pointer;background:var(--blue);color:white;box-shadow:0 6px 14px rgba(59,130,246,.25);}
-    .btn.secondary{background:#0b1220;color:var(--text);border:1px solid #2a3650;box-shadow:none;}
-    .btn.warn{background:var(--amber);box-shadow:0 6px 14px rgba(245,158,11,.25);}
+    .card{background:var(--card);border-radius:var(--radius);padding:16px;text-align:center;box-shadow:var(--shadow);}
+    .word-big{font-size:64px;font-weight:900;margin:12px 0;}
+    .mean{margin-top:10px;font-size:28px;color:#e2e8f0;}
+    .pill{padding:12px 18px;border-radius:999px;background:#0b1220;border:1px solid #2a3650;font-weight:700;font-size:22px;margin:0 4px;}
+    .btn{border:0;border-radius:14px;padding:12px 20px;font-weight:700;cursor:pointer;background:var(--blue);color:white;}
+    .btn.warn{background:var(--amber);}
     .btn.ghost{background:transparent;color:var(--muted);border:1px dashed #334155;}
-    .right{background:var(--card);border-radius:var(--radius);padding:14px;display:flex;flex-direction:column;gap:12px;}
-    .right .row{display:flex;gap:8px;flex-wrap:wrap;}
-    .chip{font-size:12px;color:#d1d5db;padding:6px 10px;border-radius:999px;background:#0b1220;border:1px solid #2a3650;}
-    .small{font-size:12px;color:var(--muted);}
-    .qopts{display:grid;grid-template-columns:1fr 1fr;gap:10px;width:100%;}
-    .opt{background:#0b1220;border:1px solid #2a3650;border-radius:14px;padding:14px;text-align:center;cursor:pointer;transition:transform .06s ease;}
-    .opt:active{transform:scale(.98);}
-    .opt .t{font-size:18px;font-weight:800;}
-    .footer{display:flex;gap:8px;justify-content:space-between;align-items:center;}
-    .footer .left,.footer .right{display:flex;gap:8px;flex-wrap:wrap;}
-    .hidden{display:none !important;}
-    .modal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.5);z-index:50;}
+    .qopts{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px;}
+    .opt{background:#0b1220;border:1px solid #2a3650;border-radius:14px;padding:12px;text-align:center;cursor:pointer;}
+    .hidden{display:none!important;}
+    .modal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.5);}
     .modal.show{display:flex;}
-    .modal .box{background:var(--panel);border-radius:20px;padding:20px;width:min(560px,92vw);box-shadow:var(--shadow);}
-    .modal h3{margin:0 0 8px 0;font-size:20px;}
+    .modal .box{background:var(--panel);padding:20px;border-radius:16px;max-width:500px;}
   </style>
 </head>
 <body>
   <div class="app">
-    <div class="topbar">
-      <div class="brand">동사 변형 학습 · 4지선다 퀴즈</div>
-      <div class="stats">
-        🔊 <label><input type="checkbox" id="mute"/> 음소거</label> ·
-        정답 <span id="ok">0</span> · 
-        오답 <span id="no">0</span> · 
-        남은 <span id="left">0</span> · 
-        세트 <span id="setIdx">1</span>/<span id="setTotal">1</span>
-      </div>
+    <div class="topbar"><div class="brand">동사 변형 학습 · 4지선다 퀴즈</div>
+      <div class="stats">정답 <span id="ok">0</span> · 오답 <span id="no">0</span> · 남은 <span id="left">0</span> · 세트 <span id="setIdx">1</span>/<span id="setTotal">1</span></div>
     </div>
-
     <div class="panel">
       <div class="controls">
         <div><label>모드</label><select id="mode"><option value="study">학습</option><option value="quiz">퀴즈</option></select></div>
         <div><label>세트 크기</label><select id="setSize"><option value="20" selected>20</option><option value="10">10</option><option value="30">30</option></select></div>
-        <div><label>패턴</label><select id="patternFilter"><option value="all">전체</option><option value="AAA">AAA</option><option value="ABB">ABB</option><option value="ABA">ABA</option><option value="ABC">ABC</option><option value="REG">REG</option></select></div>
-        <div class="row"><label style="width:100%">속도 <span id="spdTxt">1.0</span>x</label><input type="range" id="rate" min="0.8" max="1.2" step="0.05" value="1.0"></div>
-        <div class="row"><label><input type="checkbox" id="autoNext"/> 자동 다음</label></div>
-        <div class="row"><label><input type="checkbox" id="onlyWrong"/> 오답 전용</label></div>
+        <div><label>패턴</label><select id="patternFilter"><option value="all">전체</option><option value="AAA">AAA</option><option value="ABB">ABB</option><option value="ABC">ABC</option><option value="REG">REG</option></select></div>
       </div>
-      <div class="progress"><div class="bar"><i id="bar"></i></div><div class="small"><span id="progTxt">0 / 0</span></div></div>
+      <div class="progress"><div class="bar"><i id="bar"></i></div><div id="progTxt">0/0</div></div>
     </div>
-
     <div class="screens">
       <div class="card">
-        <div class="prompt-tag" id="promptTag">학습 카드</div>
         <div id="screenStudy">
           <div class="word-big" id="bWord">ready?</div>
           <div class="mean" id="krMeaning">뜻: -</div>
-          <div class="triple"><span class="pill" id="pBase">base</span><span class="pill" id="pPast">past</span><span class="pill" id="pPP">pp</span></div>
-          <div class="row"><button class="btn" id="btnPlay">▶ 읽기</button><button class="btn secondary" id="btnRepeat">⟳ 반복</button><button class="btn secondary" id="btnStop">◼ 정지</button><button class="btn warn" id="btnNext">다음</button><button class="btn ghost" id="btnPrev">이전</button></div>
+          <div><span class="pill" id="pBase">base</span><span class="pill" id="pPast">past</span><span class="pill" id="pPP">pp</span></div>
+          <div><button class="btn" id="btnPlay">읽기</button><button class="btn warn" id="btnNext">다음</button><button class="btn ghost" id="btnPrev">이전</button></div>
         </div>
         <div id="screenQuiz" class="hidden">
           <div class="word-big" id="qBase">ready?</div>
-          <div class="small">제시된 동사의 형태(현재–과거–과거분사)를 고르세요.</div>
           <div class="qopts" id="opts"></div>
         </div>
       </div>
-      <div class="right">
-        <div class="row"><button class="btn ghost" id="btnStartStudy">이 세트 학습</button><button class="btn ghost" id="btnStartQuiz">세트 퀴즈</button><button class="btn ghost" id="btnNextSet">다음 세트 ▶</button></div>
-        <div><div class="small">최근 정답</div><div id="history" class="row"></div></div>
-        <div><div class="small">오답 (<span id="wcount">0</span>)</div><div id="wrongs" class="row"></div></div>
-      </div>
     </div>
-
-    <div class="footer"><div class="left"><button class="btn ghost" id="btnReset">초기화</button><button class="btn ghost" id="btnWrongOnly">오답만</button></div></div>
   </div>
 
-  <div class="modal" id="modal"><div class="box"><h3 id="modalTitle">알림</h3><div id="modalBody" class="small"></div><div class="row" style="margin-top:12px;gap:8px;justify-content:flex-end"><button class="btn secondary" id="btnModalClose">닫기</button><button class="btn" id="btnModalAction">확인</button></div></div></div>
+  <div class="modal" id="modal"><div class="box">
+    <h3 id="modalTitle">알림</h3><div id="modalBody"></div>
+    <button id="btnModalClose">닫기</button><button id="btnModalAction">확인</button>
+  </div></div>
 
   <script>
-    const $=s=>document.querySelector(s); const $$=s=>document.querySelectorAll(s);
+    /* =========================================================
+       0) 공통 도우미
+       ========================================================= */
+    const $=s=>document.querySelector(s);
     const shuffle=a=>{for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;};
-    const KR={cut:"자르다",hit:"치다",put:"두다",set:"놓다",meet:"만나다",buy:"사다",teach:"가르치다",think:"생각하다",begin:"시작하다",drink:"마시다",sing:"노래하다",swim:"수영하다",break:"부수다",choose:"선택하다",write:"쓰다",see:"보다",take:"가져가다",give:"주다",eat:"먹다",hide:"숨다",forgive:"용서하다",wake:"깨다",walk:"걷다",work:"일하다",play:"놀다"};
-    const IRREG=[["cut","cut","cut"],["hit","hit","hit"],["put","put","put"],["set","set","set"],["meet","met","met"],["buy","bought","bought"],["teach","taught","taught"],["think","thought","thought"],["begin","began","begun"],["drink","drank","drunk"],["sing","sang","sung"],["swim","swam","swum"],["break","broke","broken"],["choose","chose","chosen"],["write","wrote","written"],["see","saw","seen"],["take","took","taken"],["give","gave","given"],["eat","ate","eaten"],["hide","hid","hidden"],["forgive","forgave","forgiven"],["wake","woke","woken"]];
-    const REG=["walk","work","play"];function makeRegular(b){return{base:b,past:b+"ed",pp:b+"ed"};}
-    const VERBS=[...IRREG.map(([b,p,pp])=>({base:b,past:p,pp:pp,kr:KR[b]||"-"})),...REG.map(b=>({...makeRegular(b),kr:KR[b]||"-"}))];
 
-    let setSize=20,setIndex=0,currentSet=[],mode="study",iStudy=0,qOrder=[],qi=0,ok=0,no=0,wrongList=[],history=[];
+    /* =========================================================
+       1) 의미 사전 + 동사 데이터
+       ========================================================= */
+    const KR={cut:"자르다",hit:"치다",let:"~하게 하다",put:"두다",set:"놓다/설정하다",shut:"닫다",meet:"만나다",send:"보내다",buy:"사다",teach:"가르치다",think:"생각하다",build:"짓다",begin:"시작하다",drink:"마시다",sing:"노래하다",swim:"수영하다",break:"부수다",choose:"선택하다",write:"쓰다",see:"보다",take:"가져가다",give:"주다",eat:"먹다",hide:"숨다",wake:"깨다",walk:"걷다",work:"일하다",play:"놀다",use:"사용하다",call:"전화하다"};
+    const IRREG=[["cut","cut","cut","AAA"],["hit","hit","hit","AAA"],["let","let","let","AAA"],["put","put","put","AAA"],["set","set","set","AAA"],["shut","shut","shut","AAA"],
+      ["meet","met","met","ABB"],["send","sent","sent","ABB"],["buy","bought","bought","ABB"],["teach","taught","taught","ABB"],["think","thought","thought","ABB"],["build","built","built","ABB"],
+      ["begin","began","begun","ABC"],["drink","drank","drunk","ABC"],["sing","sang","sung","ABC"],["swim","swam","swum","ABC"],["break","broke","broken","ABC"],["choose","chose","chosen","ABC"],["write","wrote","written","ABC"],["see","saw","seen","ABC"],["take","took","taken","ABC"],["give","gave","given","ABC"],["eat","ate","eaten","ABC"],["hide","hid","hidden","ABC"],["wake","woke","woken","ABC"]];
+    const REG=["walk","work","play","use","call"];
+    function makeRegular(b){return{base:b,past:b+"ed",pp:b+"ed",pattern:"REG",kr:KR[b]};}
+    const VERBS=[...IRREG.map(([b,p,pp,pat])=>({base:b,past:p,pp,pattern:pat,kr:KR[b]})),...REG.map(makeRegular)];
 
-    function updateStats(){const total=currentSet.length;const done=(mode==="quiz")?(ok+no):iStudy;$("#ok").textContent=ok;$("#no").textContent=no;$("#left").textContent=Math.max(total-done,0);$("#progTxt").textContent=`${done}/${total}`;$("#bar").style.width=(total?(done/total*100):0)+"%";$("#wcount").textContent=wrongList.length;}
-    function buildSets(){setSize=parseInt($("#setSize").value,10)||20;let list=shuffle(VERBS.slice());const total=Math.ceil(list.length/setSize);if(setIndex>=total)setIndex=0;$("#setIdx").textContent=setIndex+1;$("#setTotal").textContent=total;currentSet=list.slice(setIndex*setSize,setIndex*setSize+setSize);iStudy=0;ok=no=qi=0;wrongList=[];showStudyCard();updateStats();}
-    function showStudyCard(){if(!currentSet.length){$("#bWord").textContent="(빈 세트)";return;}const v=currentSet[iStudy];$("#bWord").textContent=v.base;$("#pBase").textContent=v.base;$("#pPast").textContent=v.past;$("#pPP").textContent=v.pp;$("#krMeaning").textContent="뜻: "+v.kr;}
-    function speakTriple(v,r=1){const vs=[v.base,v.past,v.pp];vs.forEach((t,i)=>{const u=new SpeechSynthesisUtterance(t);u.lang="en-US";u.rate=r;u.onstart=()=>[$("#pBase"),$("#pPast"),$("#pPP")][i].classList.add("hl");u.onend=()=>[$("#pBase"),$("#pPast"),$("#pPP")].forEach(e=>e.classList.remove("hl"));speechSynthesis.speak(u);});}
-    function showQuizCard(){const box=$("#opts");box.innerHTML="";if(!currentSet.length){$("#qBase").textContent="(빈 세트)";return;}if(qi>=qOrder.length){showModal("세트 완료!",`${ok}정답 / ${no}오답`,"다음",()=>{setIndex++;buildSets();setMode("quiz");hideModal();});return;}const v=currentSet[qOrder[qi]];$("#qBase").textContent=v.base;shuffle([{...v,ok:true},{base:v.base,past:v.past+"d",pp:v.pp+"d"},{base:v.base,past:v.past+"t",pp:v.pp+"t"},{base:v.base,past:v.base+"ed",pp:v.base+"ed"}]).forEach(o=>{const d=document.createElement("div");d.className="opt";d.innerHTML=`<div class="t">${o.base} – ${o.past} – ${o.pp}</div>`;d.onclick=()=>{if(o.ok)ok++;else{no++;wrongList.push(v);}qi++;showQuizCard();updateStats();};box.appendChild(d);});}
-    function setMode(m){mode=m;if(m==="study"){ $("#screenStudy").classList.remove("hidden");$("#screenQuiz").classList.add("hidden");}else{$("#screenQuiz").classList.remove("hidden");$("#screenStudy").classList.add("hidden");}updateStats();}
+    /* =========================================================
+       2) 상태
+       ========================================================= */
+    let currentSet=[],mode="study",iStudy=0,qOrder=[],qi=0,ok=0,no=0,setIndex=0,setSize=20;
+
+    /* =========================================================
+       3) 진행바/통계
+       ========================================================= */
+    function updateStats(){const total=currentSet.length;const done=(mode==="quiz")?(ok+no):iStudy;
+      $("#ok").textContent=ok;$("#no").textContent=no;$("#left").textContent=total-done;
+      $("#progTxt").textContent=`${done}/${total}`;$("#bar").style.width=(total?(done/total*100):0)+"%";}
+
+    /* =========================================================
+       4) 세트 구성
+       ========================================================= */
+    function buildSets(){setSize=parseInt($("#setSize").value,10)||20;
+      let list=VERBS.slice();list=shuffle(list);
+      const total=Math.max(1,Math.ceil(list.length/setSize));
+      if(setIndex>=total) setIndex=0;
+      $("#setIdx").textContent=setIndex+1;$("#setTotal").textContent=total;
+      currentSet=list.slice(setIndex*setSize,setIndex*setSize+setSize);
+      iStudy=0;ok=no=qi=0;
+      showStudyCard();updateStats();}
+
+    /* =========================================================
+       5) 학습 모드
+       ========================================================= */
+    function showStudyCard(){if(!currentSet.length){$("#bWord").textContent="(빈 세트)";return;}
+      const v=currentSet[iStudy];$("#bWord").textContent=v.base;$("#pBase").textContent=v.base;$("#pPast").textContent=v.past;$("#pPP").textContent=v.pp;$("#krMeaning").textContent="뜻: "+(v.kr||"-");}
+    function speakTriple(v){[v.base,v.past,v.pp].forEach(t=>{const u=new SpeechSynthesisUtterance(t);u.lang="en-US";speechSynthesis.speak(u);});}
+    function onStudyComplete(){showModal("수고하셨습니다!","이제 퀴즈를 풀어보세요.","퀴즈 시작",()=>{setMode("quiz");startQuizFresh();});}
+
+    /* =========================================================
+       6) 퀴즈 모드
+       ========================================================= */
+    function makeOptions(v){const correct={base:v.base,past:v.past,pp:v.pp,ok:true};
+      return shuffle([correct,{base:v.base,past:v.past+"d",pp:v.pp+"d",ok:false},{base:v.base,past:v.past+"t",pp:v.pp+"t",ok:false},{base:v.base,past:v.base+"ed",pp:v.base+"ed",ok:false}]);}
+    function showQuizCard(){const box=$("#opts");box.innerHTML="";if(qi>=qOrder.length){showModal("세트 완료!",`${ok}정답 / ${no}오답`,"다음 세트",()=>{setIndex++;buildSets();setMode("quiz");});return;}
+      const v=currentSet[qOrder[qi]];$("#qBase").textContent=v.base;
+      makeOptions(v).forEach(o=>{const d=document.createElement("div");d.className="opt";d.textContent=`${o.base} – ${o.past} – ${o.pp}`;d.onclick=()=>{if(o.ok)ok++;else no++;qi++;showQuizCard();updateStats();};box.appendChild(d);});}
+
+    /* =========================================================
+       7) 모드 전환
+       ========================================================= */
+    function setMode(m){mode=m;if(m==="study"){$("#screenStudy").classList.remove("hidden");$("#screenQuiz").classList.add("hidden");}else{$("#screenQuiz").classList.remove("hidden");$("#screenStudy").classList.add("hidden");}updateStats();}
+    function startQuizFresh(){qi=0;ok=no=0;qOrder=shuffle([...currentSet.keys()]);showQuizCard();}
+
+    /* =========================================================
+       8) 모달
+       ========================================================= */
     function showModal(t,b,a,f){$("#modalTitle").textContent=t;$("#modalBody").innerHTML=b;$("#btnModalAction").textContent=a;$("#btnModalAction").onclick=()=>{if(f)f();hideModal();};$("#btnModalClose").onclick=hideModal;$("#modal").classList.add("show");}
     function hideModal(){$("#modal").classList.remove("show");}
 
-    window.addEventListener("DOMContentLoaded",()=>{buildSets();setMode("study");updateStats();
+    /* =========================================================
+       9) 이벤트 바인딩
+       ========================================================= */
+    window.addEventListener("DOMContentLoaded",()=>{buildSets();setMode("study");
+      $("#btnPlay").onclick=()=>speakTriple(currentSet[iStudy]);
+      $("#btnNext").onclick=()=>{iStudy++;if(iStudy>=currentSet.length)onStudyComplete();else showStudyCard();updateStats();};
+      $("#btnPrev").onclick=()=>{iStudy=Math.max(iStudy-1,0);showStudyCard();updateStats();};
       $("#mode").onchange=e=>setMode(e.target.value);
       $("#setSize").onchange=()=>{setIndex=0;buildSets();};
-      $("#patternFilter").onchange=()=>{setIndex=0;buildSets();};
-      $("#rate").oninput=e=>$("#spdTxt").textContent=e.target.value;
-      $("#btnPlay").onclick=()=>{if(currentSet.length)speakTriple(currentSet[iStudy],parseFloat($("#rate").value));};
-      $("#btnRepeat").onclick=()=>{if(currentSet.length)speakTriple(currentSet[iStudy],parseFloat($("#rate").value));};
-      $("#btnStop").onclick=()=>speechSynthesis.cancel();
-      $("#btnNext").onclick=()=>{iStudy++;if(iStudy>=currentSet.length){showModal("학습완료","퀴즈를 시작하세요.","퀴즈",()=>{setMode("quiz");qOrder=shuffle([...currentSet.keys()]);qi=0;showQuizCard();});}else showStudyCard();updateStats();};
-      $("#btnPrev").onclick=()=>{iStudy=Math.max(iStudy-1,0);showStudyCard();updateStats();};
-      $("#btnStartStudy").onclick=()=>{setMode("study");iStudy=0;showStudyCard();};
-      $("#btnStartQuiz").onclick=()=>{setMode("quiz");qOrder=shuffle([...currentSet.keys()]);qi=0;showQuizCard();};
-      $("#btnNextSet").onclick=()=>{setIndex++;buildSets();setMode($("#mode").value);};
-      $("#btnReset").onclick=()=>{setIndex=0;buildSets();setMode("study");};
-      $("#btnWrongOnly").onclick=()=>{if(!wrongList.length){alert("오답 없음");return;}currentSet=shuffle(wrongList.slice());wrongList=[];ok=no=qi=0;qOrder=shuffle([...currentSet.keys()]);setMode("quiz");showQuizCard();};
     });
   </script>
 </body>
