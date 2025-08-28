@@ -48,12 +48,12 @@
 
   .card{ background:var(--card); border-radius:var(--radius); padding:16px; box-shadow:var(--shadow); display:flex; flex-direction:column; justify-content:center; align-items:center; text-align:center; }
   .prompt-tag{ font-size:12px; color:var(--muted); border:1px dashed #334155; padding:2px 8px; border-radius:999px; margin-bottom:8px }
-  .word-big{ font-size:42px; font-weight:800; letter-spacing:.3px; margin:8px 0 10px }
+  .word-big{ font-size:64px; font-weight:900; letter-spacing:.3px; margin:12px 0 10px }
   .triple{ display:flex; gap:12px; flex-wrap:wrap; justify-content:center; margin:4px 0 6px}
-  .pill{ padding:8px 12px; border-radius:999px; background:#0b1220; border:1px solid #2a3650; font-weight:700; font-size:18px }
+  .pill{ padding:12px 18px; border-radius:999px; background:#0b1220; border:1px solid #2a3650; font-weight:700; font-size:22px }
   .pill.hl{ outline:2px solid var(--blue) }
-  .mean{ margin-top:8px; font-size:14px; color:#d1d5db }
-  .btn{ border:0; border-radius:12px; padding:12px 14px; font-weight:700; cursor:pointer; background:var(--blue); color:white; box-shadow:0 6px 14px rgba(59,130,246,.25) }
+  .mean{ margin-top:16px; font-size:28px; color:#e2e8f0; }
+  .btn{ border:0; border-radius:14px; padding:16px 24px; font-weight:700; cursor:pointer; background:var(--blue); color:white; box-shadow:0 6px 14px rgba(59,130,246,.25) }
   .btn.secondary{ background:#0b1220; color:var(--text); border:1px solid #2a3650; box-shadow:none }
   .btn.warn{ background:var(--amber); box-shadow:0 6px 14px rgba(245,158,11,.25) }
   .btn.ghost{ background:transparent; color:var(--muted); border:1px dashed #334155 }
@@ -75,17 +75,7 @@
   .modal h3{ margin:0 0 8px 0; font-size:20px }
   .grid-2{ display:grid; grid-template-columns:1fr 1fr; gap:10px }
 
-  /* === 진단 패널 === */
-  .diag-toggle{ display:inline-flex; align-items:center; gap:6px; }
-  .diag{ position:fixed; right:12px; bottom:12px; width:min(560px,95vw); background:var(--panel); border:1px solid #334155; border-radius:16px; box-shadow:var(--shadow); display:none; z-index:60; }
-  .diag.show{ display:block; }
-  .diag .hd{ display:flex; justify-content:space-between; align-items:center; padding:10px 12px; border-bottom:1px solid #2a3650; }
-  .diag .ct{ padding:12px; }
-  .diag .row{ display:flex; flex-wrap:wrap; gap:8px; align-items:center; }
-  .diag .kv{ font-size:12px; color:#cbd5e1; }
-  .diag select, .diag input[type="checkbox"]{ background:#0b1220; color:var(--text); border:1px solid #2a3650; border-radius:8px; padding:8px; }
-  .diag .btn{ padding:8px 10px; border-radius:8px; font-size:12px; }
-  .diag pre{ max-height:180px; overflow:auto; background:#0b1220; border:1px solid #2a3650; padding:8px; border-radius:10px; font-size:12px; color:#e5e7eb; }
+
 </style>
 </head>
 <body>
@@ -988,6 +978,7 @@ window.addEventListener('DOMContentLoaded', ()=>{
 </script>
 </body>
 </html>
+
 
 
 
