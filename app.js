@@ -72,7 +72,6 @@ const VERBS=RAW;
    ========================================================= */
 let setSize=20,setIndex=0,currentSet=[],mode="study";
 let iStudy=0, qOrder=[], qi=0, ok=0,no=0,wrongList=[],history=[];
-let lastUtters=[];
 
 /* =========================================================
    4) 진행바/통계
@@ -242,3 +241,13 @@ $("#btnWrongOnly").addEventListener("click",()=>{
   qOrder=shuffle([...currentSet.keys()]); setMode("quiz"); showQuizCard(); updateStats();
 });
 
+/* =========================================================
+   12) 초기 실행
+   ========================================================= */
+window.addEventListener("DOMContentLoaded",()=>{
+  $("#spdTxt").textContent=$("#rate").value;
+  buildSets();
+  setMode("study");
+  showStudyCard();
+  updateStats();
+});
