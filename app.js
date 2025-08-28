@@ -242,13 +242,3 @@ $("#btnWrongOnly").addEventListener("click",()=>{
   qOrder=shuffle([...currentSet.keys()]); setMode("quiz"); showQuizCard(); updateStats();
 });
 
-/* =========================================================
-   12) 시작
-   ========================================================= */
-window.addEventListener("DOMContentLoaded",()=>{
-  $("#spdTxt").textContent=$("#rate").value;
-  buildSets();
-  setMode("study");
-  showStudyCard();
-  updateStats();
-});
