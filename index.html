@@ -7,12 +7,14 @@
   <style>
     :root{
       --bg:#0f172a; --card:#111827; --panel:#1f2937; --text:#e5e7eb; --muted:#9ca3af;
-      --blue:#3b82f6; --green:#22c55e; --red:#ef4444; --amber:#f59e0b;
+      --blue:#3b82f6; --green:#22c55e; --amber:#f59e0b;
       --radius:16px; --shadow:0 6px 18px rgba(0,0,0,.35);
     }
     *{box-sizing:border-box;}
-    body{margin:0; font-family:"Noto Sans KR",system-ui,Segoe UI,Roboto,Apple SD Gothic Neo,Malgun Gothic,sans-serif;
-      background:var(--bg); color:var(--text); min-height:100vh; display:flex; align-items:center; justify-content:center;}
+    body{
+      margin:0; font-family:"Noto Sans KR",system-ui,Segoe UI,Roboto,Apple SD Gothic Neo,Malgun Gothic,sans-serif;
+      background:var(--bg); color:var(--text); min-height:100vh; display:flex; align-items:center; justify-content:center;
+    }
     .app{width:min(1000px,94vw); height:min(760px,94vh); display:grid; gap:12px; grid-template-rows:auto auto 1fr auto;}
     .topbar{display:flex; justify-content:space-between; align-items:center;}
     .brand{font-weight:800; font-size:20px;}
@@ -20,7 +22,9 @@
     .panel{background:var(--panel); border-radius:var(--radius); box-shadow:var(--shadow); padding:12px;}
     .controls{display:grid; grid-template-columns:repeat(6,1fr); gap:8px;}
     .controls label{font-size:12px; color:var(--muted);}
-    .controls select,.controls input[type="range"],.controls input[type="checkbox"]{width:100%; background:#0b1220; color:var(--text); border:1px solid #263247; border-radius:10px; padding:6px;}
+    .controls select,.controls input[type="range"],.controls input[type="checkbox"]{
+      width:100%; background:#0b1220; color:var(--text); border:1px solid #263247; border-radius:10px; padding:6px;
+    }
     .progress{display:flex; align-items:center; gap:10px; margin-top:10px;}
     .bar{flex:1; height:12px; background:#0b1220; border:1px solid #263247; border-radius:999px; overflow:hidden;}
     .bar>i{display:block; height:100%; width:0%; background:linear-gradient(90deg,#2563eb,#22c55e);}
@@ -142,13 +146,13 @@
 </div></div>
 
 <script>
+/* ---------- Utilities ---------- */
 const $=s=>document.querySelector(s);
 const $$=s=>document.querySelectorAll(s);
 const shuffle=a=>{for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;};
-const say=(txt,rate)=>{ if($("#mute").checked) return null; const u=new SpeechSynthesisUtterance(txt); u.lang="en-US"; u.rate=rate; speechSynthesis.speak(u); return u; };
 
+/* ---------- Data ---------- */
 const VERBS=[
-  // 불규칙 + 자주 쓰는 규칙 동사 (100+)
   {base:"be",past:"was/were",pp:"been",kr:"~이다/있다"},
   {base:"become",past:"became",pp:"become",kr:"~이 되다"},
   {base:"begin",past:"began",pp:"begun",kr:"시작하다"},
@@ -218,7 +222,7 @@ const VERBS=[
   {base:"wear",past:"wore",pp:"worn",kr:"입다"},
   {base:"win",past:"won",pp:"won",kr:"이기다"},
   {base:"write",past:"wrote",pp:"written",kr:"쓰다"},
-  // 규칙/기본 활용도 높은 동사
+  /* 자주 쓰는 규칙 동사 */
   {base:"open",past:"opened",pp:"opened",kr:"열다"},
   {base:"close",past:"closed",pp:"closed",kr:"닫다"},
   {base:"play",past:"played",pp:"played",kr:"놀다/연주하다"},
@@ -243,11 +247,9 @@ const VERBS=[
   {base:"answer",past:"answered",pp:"answered",kr:"답하다"},
   {base:"start",past:"started",pp:"started",kr:"시작하다"},
   {base:"stop",past:"stopped",pp:"stopped",kr:"멈추다"},
-  {base:"play",past:"played",pp:"played",kr:"놀다/연주하다"},
   {base:"practice",past:"practiced",pp:"practiced",kr:"연습하다"},
   {base:"save",past:"saved",pp:"saved",kr:"저축/저장하다"},
   {base:"borrow",past:"borrowed",pp:"borrowed",kr:"빌리다"},
-  {base:"visit",past:"visited",pp:"visited",kr:"방문하다"},
   {base:"travel",past:"traveled",pp:"traveled",kr:"여행하다"},
   {base:"climb",past:"climbed",pp:"climbed",kr:"오르다"},
   {base:"paint",past:"painted",pp:"painted",kr:"색칠하다"},
@@ -259,7 +261,6 @@ const VERBS=[
   {base:"enjoy",past:"enjoyed",pp:"enjoyed",kr:"즐기다"},
   {base:"decide",past:"decided",pp:"decided",kr:"결정하다"},
   {base:"invite",past:"invited",pp:"invited",kr:"초대하다"},
-  {base:"visit",past:"visited",pp:"visited",kr:"방문하다"},
   {base:"mail",past:"mailed",pp:"mailed",kr:"우편 보내다"},
   {base:"text",past:"texted",pp:"texted",kr:"문자 보내다"},
   {base:"email",past:"emailed",pp:"emailed",kr:"이메일 보내다"},
@@ -271,9 +272,11 @@ const VERBS=[
   {base:"plant",past:"planted",pp:"planted",kr:"심다"}
 ];
 
+/* ---------- State ---------- */
 let setSize=20,setIndex=0,currentSet=[],mode="study";
 let iStudy=0, qi=0, ok=0, no=0, wrongList=[], history=[];
 
+/* ---------- UI helpers ---------- */
 function updateStats(){
   const total=currentSet.length||0;
   const done=(mode==="quiz")?(ok+no):Math.min(iStudy,total);
@@ -306,6 +309,7 @@ function renderWrongs(){
   });
 }
 
+/* ---------- Core flows ---------- */
 function buildSets(){
   setSize=parseInt($("#setSize").value,10)||20;
   let list=shuffle(VERBS.slice());
@@ -316,7 +320,6 @@ function buildSets(){
   iStudy=0; ok=0; no=0; qi=0; wrongList=[]; history=[];
   showStudyCard(); updateStats(); renderWrongs(); renderHistory();
 }
-
 function showStudyCard(){
   $("#promptTag").textContent="학습 카드";
   if(!currentSet.length){$("#bWord").textContent="(빈 세트)"; $("#krMeaning").textContent="뜻: -"; return;}
@@ -325,7 +328,6 @@ function showStudyCard(){
   $("#pBase").textContent=v.base; $("#pPast").textContent=v.past; $("#pPP").textContent=v.pp;
   $("#krMeaning").textContent="뜻: "+(v.kr||"-");
 }
-
 function speakTriple(v,rate=1.0,autoMove=false){
   speechSynthesis.cancel();
   const arr=[{el:"#pBase",txt:v.base},{el:"#pPast",txt:v.past},{el:"#pPP",txt:v.pp}];
@@ -346,9 +348,8 @@ function speakTriple(v,rate=1.0,autoMove=false){
       u.onend=()=>{ $(el).classList.remove("hl"); idx++; speakOne(); };
       speechSynthesis.speak(u);
     } else {
-      // 음소거 시 하이라이트만 순차적으로
       $$(".pill").forEach(p=>p.classList.remove("hl")); $(el).classList.add("hl");
-      setTimeout(()=>{ $(el).classList.remove("hl"); idx++; speakOne(); }, 250);
+      setTimeout(()=>{ $(el).classList.remove("hl"); idx++; speakOne(); }, 220);
     }
   };
   speakOne();
@@ -359,8 +360,8 @@ function onStudyComplete(){
   });
 }
 
+/* ---------- Quiz ---------- */
 function makeOptions(v){
-  // 정답 1 + 다른 동사 3개에서 past/pp만 섞어 보기 구성
   const pool = shuffle(VERBS.filter(x=>x.base!==v.base)).slice(0,6);
   const distracts = shuffle(pool).slice(0,3).map(x=>({base:v.base,past:x.past,pp:x.pp,ok:false}));
   const correct = {base:v.base,past:v.past,pp:v.pp,ok:true};
@@ -392,6 +393,7 @@ function showQuizCard(){
   updateStats();
 }
 
+/* ---------- Mode & Modal ---------- */
 function setMode(m){
   mode=m;
   if(m==="study"){
@@ -416,74 +418,56 @@ function showModal(t,b,a,f){
 }
 function hideModal(){ $("#modal").classList.remove("show"); }
 
-// 이벤트 바인딩
-$("#btnPlay").onclick=()=>{ if(currentSet.length) speakTriple(currentSet[iStudy],parseFloat($("#rate").value),false); };
-$("#btnRepeat").onclick=()=>{ if(currentSet.length) speakTriple(currentSet[iStudy],parseFloat($("#rate").value),true); };
-$("#btnStop").onclick=()=>speechSynthesis.cancel();
-$("#btnNext").onclick=()=>{ speechSynthesis.cancel(); iStudy++; if(iStudy>=currentSet.length) onStudyComplete(); else showStudyCard(); updateStats(); };
-$("#btnPrev").onclick=()=>{ speechSynthesis.cancel(); iStudy=Math.max(iStudy-1,0); showStudyCard(); updateStats(); };
-
-// 학습 시작 버튼 수정: 바로 읽기 시작
-$("#btnStartStudy").onclick=()=>{
-  setMode("study");
-  iStudy=0;
-  showStudyCard();
-  updateStats();
-  if(currentSet.length){
-    speakTriple(currentSet[iStudy], parseFloat($("#rate").value), $("#autoNext").checked);
-  }
-};
-
-$("#btnStartQuiz").onclick=()=>startQuizFresh();
-$("#btnNextSet").onclick=()=>{ setIndex++; buildSets(); setMode($("#mode").value); };
-$("#btnReset").onclick=()=>{ setIndex=0; buildSets(); setMode("study"); };
-$("#btnWrongOnly").onclick=()=>{ if(!wrongList.length){ alert("오답 없음"); return; }
-  currentSet=shuffle(wrongList.slice()); wrongList=[]; ok=0; no=0; qi=0; setMode("quiz"); showQuizCard(); renderWrongs(); updateStats(); };
-
-// 단축키
-window.addEventListener("keydown",(e)=>{
-  if(e.target.tagName==="INPUT" || e.target.tagName==="SELECT") return;
-  if(e.code==="Space"){ e.preventDefault(); if(speechSynthesis.speaking) speechSynthesis.cancel(); else if(mode==="study") $("#btnPlay").click(); }
-  if(e.key==="ArrowRight"){ $("#btnNext").click(); }
-  if(e.key==="ArrowLeft"){ $("#btnPrev").click(); }
-  if(e.key.toLowerCase()==="q"){ $("#btnStartQuiz").click(); }
-  if(e.key.toLowerCase()==="s"){ $("#btnStartStudy").click(); }
-});
-
-// DOMContentLoaded 시점에 이벤트/셋업 실행
+/* ---------- Init & Event binding ---------- */
 window.addEventListener("DOMContentLoaded",()=>{
+  // 초기 세팅
   buildSets();
   setMode("study");
 
-  // 모드 변경 시 처리
+  // 버튼들
+  $("#btnPlay").onclick=()=>{ if(currentSet.length) speakTriple(currentSet[iStudy],parseFloat($("#rate").value),false); };
+  $("#btnRepeat").onclick=()=>{ if(currentSet.length) speakTriple(currentSet[iStudy],parseFloat($("#rate").value),true); };
+  $("#btnStop").onclick=()=>speechSynthesis.cancel();
+  $("#btnNext").onclick=()=>{ speechSynthesis.cancel(); iStudy++; if(iStudy>=currentSet.length) onStudyComplete(); else showStudyCard(); updateStats(); };
+  $("#btnPrev").onclick=()=>{ speechSynthesis.cancel(); iStudy=Math.max(iStudy-1,0); showStudyCard(); updateStats(); };
+
+  $("#btnStartStudy").onclick=()=>{
+    setMode("study");
+    iStudy=0;
+    showStudyCard();
+    updateStats();
+    if(currentSet.length){
+      speakTriple(currentSet[iStudy], parseFloat($("#rate").value), $("#autoNext").checked);
+    }
+  };
+  $("#btnStartQuiz").onclick=()=>startQuizFresh();
+  $("#btnNextSet").onclick=()=>{ setIndex++; buildSets(); setMode($("#mode").value); };
+  $("#btnReset").onclick=()=>{ setIndex=0; buildSets(); setMode("study"); };
+  $("#btnWrongOnly").onclick=()=>{ if(!wrongList.length){ alert("오답 없음"); return; }
+    currentSet=shuffle(wrongList.slice()); wrongList=[]; ok=0; no=0; qi=0; setMode("quiz"); showQuizCard(); renderWrongs(); updateStats(); };
+
+  // 셀렉터들
   $("#mode").addEventListener("change", e=>{
     setMode(e.target.value);
     if(e.target.value==="study" && currentSet.length){
       speakTriple(currentSet[iStudy], parseFloat($("#rate").value), $("#autoNext").checked);
     }
   });
-
-  // 세트 크기 변경 시 처리
   $("#setSize").addEventListener("change",()=>{
     buildSets();
     setMode($("#mode").value);
   });
+
+  // 단축키
+  window.addEventListener("keydown",(e)=>{
+    if(e.target.tagName==="INPUT" || e.target.tagName==="SELECT") return;
+    if(e.code==="Space"){ e.preventDefault(); if(speechSynthesis.speaking) speechSynthesis.cancel(); else if(mode==="study") $("#btnPlay").click(); }
+    if(e.key==="ArrowRight"){ $("#btnNext").click(); }
+    if(e.key==="ArrowLeft"){ $("#btnPrev").click(); }
+    if(e.key.toLowerCase()==="q"){ $("#btnStartQuiz").click(); }
+    if(e.key.toLowerCase()==="s"){ $("#btnStartStudy").click(); }
+  });
 });
-
-
-// 단축키
-window.addEventListener("keydown",(e)=>{
-  if(e.target.tagName==="INPUT" || e.target.tagName==="SELECT") return;
-  if(e.code==="Space"){ e.preventDefault(); if(speechSynthesis.speaking) speechSynthesis.cancel(); else if(mode==="study") $("#btnPlay").click(); }
-  if(e.key==="ArrowRight"){ $("#btnNext").click(); }
-  if(e.key==="ArrowLeft"){ $("#btnPrev").click(); }
-  if(e.key.toLowerCase()==="q"){ $("#btnStartQuiz").click(); }
-  if(e.key.toLowerCase()==="s"){ $("#btnStartStudy").click(); }
-});
-
-window.addEventListener("DOMContentLoaded",()=>{ buildSets(); setMode("study"); });
 </script>
 </body>
 </html>
-
-
