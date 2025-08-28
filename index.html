@@ -422,24 +422,54 @@ $("#btnRepeat").onclick=()=>{ if(currentSet.length) speakTriple(currentSet[iStud
 $("#btnStop").onclick=()=>speechSynthesis.cancel();
 $("#btnNext").onclick=()=>{ speechSynthesis.cancel(); iStudy++; if(iStudy>=currentSet.length) onStudyComplete(); else showStudyCard(); updateStats(); };
 $("#btnPrev").onclick=()=>{ speechSynthesis.cancel(); iStudy=Math.max(iStudy-1,0); showStudyCard(); updateStats(); };
+
+// 학습 시작 버튼 수정: 바로 읽기 시작
 $("#btnStartStudy").onclick=()=>{
   setMode("study");
   iStudy=0;
   showStudyCard();
   updateStats();
-  // 시작 즉시 읽기 (자동다음 체크 시 자동 진행)
   if(currentSet.length){
     speakTriple(currentSet[iStudy], parseFloat($("#rate").value), $("#autoNext").checked);
   }
 };
+
 $("#btnStartQuiz").onclick=()=>startQuizFresh();
 $("#btnNextSet").onclick=()=>{ setIndex++; buildSets(); setMode($("#mode").value); };
 $("#btnReset").onclick=()=>{ setIndex=0; buildSets(); setMode("study"); };
 $("#btnWrongOnly").onclick=()=>{ if(!wrongList.length){ alert("오답 없음"); return; }
   currentSet=shuffle(wrongList.slice()); wrongList=[]; ok=0; no=0; qi=0; setMode("quiz"); showQuizCard(); renderWrongs(); updateStats(); };
 
-$("#mode").addEventListener("change",e=>setMode(e.target.value));
-$("#setSize").addEventListener("change",()=>{ buildSets(); setMode($("#mode").value); });
+// 단축키
+window.addEventListener("keydown",(e)=>{
+  if(e.target.tagName==="INPUT" || e.target.tagName==="SELECT") return;
+  if(e.code==="Space"){ e.preventDefault(); if(speechSynthesis.speaking) speechSynthesis.cancel(); else if(mode==="study") $("#btnPlay").click(); }
+  if(e.key==="ArrowRight"){ $("#btnNext").click(); }
+  if(e.key==="ArrowLeft"){ $("#btnPrev").click(); }
+  if(e.key.toLowerCase()==="q"){ $("#btnStartQuiz").click(); }
+  if(e.key.toLowerCase()==="s"){ $("#btnStartStudy").click(); }
+});
+
+// DOMContentLoaded 시점에 이벤트/셋업 실행
+window.addEventListener("DOMContentLoaded",()=>{
+  buildSets();
+  setMode("study");
+
+  // 모드 변경 시 처리
+  $("#mode").addEventListener("change", e=>{
+    setMode(e.target.value);
+    if(e.target.value==="study" && currentSet.length){
+      speakTriple(currentSet[iStudy], parseFloat($("#rate").value), $("#autoNext").checked);
+    }
+  });
+
+  // 세트 크기 변경 시 처리
+  $("#setSize").addEventListener("change",()=>{
+    buildSets();
+    setMode($("#mode").value);
+  });
+});
+
 
 // 단축키
 window.addEventListener("keydown",(e)=>{
@@ -455,4 +485,5 @@ window.addEventListener("DOMContentLoaded",()=>{ buildSets(); setMode("study"); 
 </script>
 </body>
 </html>
+
 
