@@ -154,12 +154,12 @@
       <!-- 학습 화면 -->
       <div id="screenStudy">
         <div class="word-big" id="bWord">ready?</div>
+        <div class="mean" id="krMeaning">뜻: -</div>
         <div class="triple">
           <span class="pill" id="pBase">base</span>
           <span class="pill" id="pPast">past</span>
           <span class="pill" id="pPP">pp</span>
         </div>
-        <div class="mean" id="krMeaning">뜻: -</div>
         <div class="row" style="gap:8px; margin-top:8px">
           <button class="btn" id="btnPlay">▶ 읽기</button>
           <button class="btn secondary" id="btnRepeat">⟳ 반복</button>
@@ -224,50 +224,7 @@
   </div>
 </div>
 
-<!-- 진단 패널 -->
-<div class="diag" id="diag">
-  <div class="hd">
-    <div style="font-weight:800">🔧 TTS 진단 패널</div>
-    <div class="row">
-      <button class="btn secondary" id="btnDiagClose">닫기</button>
-    </div>
-  </div>
-  <div class="ct">
-    <div class="row">
-      <div class="kv">voicesReady: <b id="dReady">false</b></div>
-      <div class="kv">ttsWarmed: <b id="dWarmed">false</b></div>
-      <div class="kv">voices: <b id="dCount">0</b>개</div>
-      <div class="kv">선택 보이스: <b id="dChosen">-</b></div>
-    </div>
-    <div class="row" style="margin-top:8px">
-      <label class="kv"><input type="checkbox" id="dOverride" /> 선택한 보이스 강제 사용</label>
-      <select id="dVoice" style="min-width:240px"></select>
-      <button class="btn" id="dRefresh">Refresh voices</button>
-      <button class="btn" id="dWarm">Warmup</button>
-      <button class="btn secondary" id="dStop">Stop/Cancel</button>
-    </div>
-    <div class="row" style="margin-top:8px">
-      <button class="btn" id="dSayHello">샘플 읽기("hello")</button>
-      <button class="btn" id="dSayTriple">현재 카드 3단계 읽기</button>
-      <button class="btn secondary" id="dPlayCorrect">효과음(correct)</button>
-      <button class="btn secondary" id="dPlayWrong">효과음(wrong)</button>
-    </div>
-    <div style="margin-top:8px">
-      <div class="small">보이스 목록</div>
-      <pre id="dVoices"></pre>
-    </div>
-    <div style="margin-top:8px">
-      <div class="small">로그</div>
-      <pre id="dLog"></pre>
-      <div class="row">
-        <button class="btn" id="dCopy">로그 복사</button>
-        <button class="btn secondary" id="dClear">로그 지우기</button>
-      </div>
-    </div>
-  </div>
-</div>
 
-<script>
 /* =========================================================
    0) 공통 도우미
    ========================================================= */
@@ -1031,5 +988,6 @@ window.addEventListener('DOMContentLoaded', ()=>{
 </script>
 </body>
 </html>
+
 
 
