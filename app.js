@@ -5,7 +5,6 @@ const $ = s => document.querySelector(s);
 const $$ = s => document.querySelectorAll(s);
 const shuffle = arr => { for(let i=arr.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [arr[i],arr[j]]=[arr[j],arr[i]]; } return arr; };
 const clamp = (n,min,max)=> Math.max(min, Math.min(max, n));
-const sleep = (ms)=> new Promise(res=>setTimeout(res, ms));
 
 /* =========================================================
    1) 의미(국문) 사전
@@ -14,21 +13,10 @@ const KR = {
   cut:"자르다", hit:"치다", let:"~하게 하다", put:"놓다/두다", set:"놓다/설정하다", shut:"닫다",
   cost:"비용이 들다", hurt:"다치게 하다/아프다", burst:"터지다", spread:"퍼지다/펴다", split:"쪼개다",
   read:"읽다", quit:"그만두다", bet:"내기하다", cast:"던지다/배역 정하다",
-  keep:"유지하다", sleep:"자다", feel:"느끼다", leave:"떠나다/남기다", meet:"만나다", send:"보내다",
-  lend:"빌려주다", spend:"쓰다/보내다", build:"짓다", bring:"가져오다", buy:"사다",
-  catch:"잡다", teach:"가르치다", think:"생각하다", sell:"팔다", tell:"말하다", say:"말하다",
-  make:"만들다", have:"가지다", hear:"듣다", hold:"잡다/개최하다", sit:"앉다", stand:"서다",
-  win:"이기다", lose:"지다/잃다", lead:"이끌다", find:"찾다", feed:"먹이를 주다", fight:"싸우다",
-  hang:"걸다/매달다", seek:"찾다/추구하다", shoot:"쏘다",
-  become:"~이 되다", come:"오다", run:"달리다", overcome:"극복하다",
-  go:"가다", begin:"시작하다", drink:"마시다", ring:"울리다", sing:"노래하다", swim:"수영하다",
-  shrink:"줄어들다", speak:"말하다", steal:"훔치다", break:"부수다/깨지다", choose:"선택하다",
-  write:"쓰다", drive:"운전하다", ride:"타다", rise:"오르다/일어나다", fall:"떨어지다/넘어지다",
-  fly:"날다", draw:"그리다/끌어당기다", see:"보다", take:"가져가다/데려가다", give:"주다",
-  eat:"먹다", hide:"숨다/숨기다", forget:"잊다", forgive:"용서하다", forbid:"금지하다",
-  wake:"깨다/깨우다", wear:"입다/착용하다", tear:"찢다", shake:"흔들다", freeze:"얼다/얼리다",
-  bite:"물다", blow:"불다", grow:"자라다/기르다", know:"알다", throw:"던지다",
-  show:"보여주다", prove:"증명하다", sew:"바느질하다", be:"~이다/있다", do:"하다",
+  meet:"만나다", send:"보내다", buy:"사다", teach:"가르치다", think:"생각하다", build:"짓다",
+  begin:"시작하다", drink:"마시다", sing:"노래하다", swim:"수영하다", break:"부수다/깨지다",
+  choose:"선택하다", write:"쓰다", see:"보다", take:"가져가다", give:"주다", eat:"먹다",
+  hide:"숨다/숨기다", forgive:"용서하다", wake:"깨다/깨우다",
   walk:"걷다", work:"일하다", play:"놀다/연주하다", use:"사용하다", call:"전화하다/부르다"
 };
 
@@ -68,7 +56,7 @@ for(const b of REG_BASES){
 const VERBS=RAW;
 
 /* =========================================================
-   3) 상태 & 오디오
+   3) 상태
    ========================================================= */
 let setSize=20,setIndex=0,currentSet=[],mode="study";
 let iStudy=0, qOrder=[], qi=0, ok=0,no=0,wrongList=[],history=[];
