@@ -22,8 +22,7 @@
     .panel{background:var(--panel);border-radius:var(--radius);box-shadow:var(--shadow);padding:12px;}
     .controls{display:grid;gap:8px;grid-template-columns:repeat(6,1fr);}
     .controls label{font-size:12px;color:var(--muted);}
-    .controls select,.controls input[type="checkbox"],.controls input[type="range"]{
-      width:100%;background:#0b1220;color:var(--text);border:1px solid #263247;border-radius:10px;padding:8px;}
+    .controls select{width:100%;background:#0b1220;color:var(--text);border:1px solid #263247;border-radius:10px;padding:8px;}
     .progress{display:flex;gap:10px;margin-top:10px;}
     .bar{flex:1;height:12px;background:#0b1220;border:1px solid #263247;border-radius:999px;overflow:hidden;}
     .bar>i{display:block;height:100%;width:0%;background:linear-gradient(90deg,#2563eb,#22c55e);}
@@ -51,8 +50,7 @@
     <div class="panel">
       <div class="controls">
         <div><label>모드</label><select id="mode"><option value="study">학습</option><option value="quiz">퀴즈</option></select></div>
-        <div><label>세트 크기</label><select id="setSize"><option value="20" selected>20</option><option value="10">10</option><option value="30">30</option></select></div>
-        <div><label>패턴</label><select id="patternFilter"><option value="all">전체</option><option value="AAA">AAA</option><option value="ABB">ABB</option><option value="ABC">ABC</option><option value="REG">REG</option></select></div>
+        <div><label>세트 크기</label><select id="setSize"><option value="20" selected>20</option><option value="30">30</option><option value="50">50</option></select></div>
       </div>
       <div class="progress"><div class="bar"><i id="bar"></i></div><div id="progTxt">0/0</div></div>
     </div>
@@ -78,79 +76,82 @@
   </div></div>
 
   <script>
-    /* =========================================================
-       0) 공통 도우미
-       ========================================================= */
     const $=s=>document.querySelector(s);
     const shuffle=a=>{for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;};
 
-    /* =========================================================
-       1) 의미 사전 + 동사 데이터
-       ========================================================= */
-    const KR={cut:"자르다",hit:"치다",let:"~하게 하다",put:"두다",set:"놓다/설정하다",shut:"닫다",meet:"만나다",send:"보내다",buy:"사다",teach:"가르치다",think:"생각하다",build:"짓다",begin:"시작하다",drink:"마시다",sing:"노래하다",swim:"수영하다",break:"부수다",choose:"선택하다",write:"쓰다",see:"보다",take:"가져가다",give:"주다",eat:"먹다",hide:"숨다",wake:"깨다",walk:"걷다",work:"일하다",play:"놀다",use:"사용하다",call:"전화하다"};
-    const IRREG=[["cut","cut","cut","AAA"],["hit","hit","hit","AAA"],["let","let","let","AAA"],["put","put","put","AAA"],["set","set","set","AAA"],["shut","shut","shut","AAA"],
-      ["meet","met","met","ABB"],["send","sent","sent","ABB"],["buy","bought","bought","ABB"],["teach","taught","taught","ABB"],["think","thought","thought","ABB"],["build","built","built","ABB"],
-      ["begin","began","begun","ABC"],["drink","drank","drunk","ABC"],["sing","sang","sung","ABC"],["swim","swam","swum","ABC"],["break","broke","broken","ABC"],["choose","chose","chosen","ABC"],["write","wrote","written","ABC"],["see","saw","seen","ABC"],["take","took","taken","ABC"],["give","gave","given","ABC"],["eat","ate","eaten","ABC"],["hide","hid","hidden","ABC"],["wake","woke","woken","ABC"]];
-    const REG=["walk","work","play","use","call"];
-    function makeRegular(b){return{base:b,past:b+"ed",pp:b+"ed",pattern:"REG",kr:KR[b]};}
-    const VERBS=[...IRREG.map(([b,p,pp,pat])=>({base:b,past:p,pp,pattern:pat,kr:KR[b]})),...REG.map(makeRegular)];
+    /* ===== 100개 이상 동사 데이터 ===== */
+    const IRREG=[
+      ["be","was/were","been"],["begin","began","begun"],["break","broke","broken"],["bring","brought","brought"],["build","built","built"],
+      ["buy","bought","bought"],["catch","caught","caught"],["choose","chose","chosen"],["come","came","come"],["cost","cost","cost"],
+      ["cut","cut","cut"],["do","did","done"],["draw","drew","drawn"],["drink","drank","drunk"],["drive","drove","driven"],
+      ["eat","ate","eaten"],["fall","fell","fallen"],["feel","felt","felt"],["find","found","found"],["fly","flew","flown"],
+      ["forget","forgot","forgotten"],["forgive","forgave","forgiven"],["get","got","got/gotten"],["give","gave","given"],["go","went","gone"],
+      ["grow","grew","grown"],["have","had","had"],["hear","heard","heard"],["hide","hid","hidden"],["hit","hit","hit"],
+      ["hold","held","held"],["keep","kept","kept"],["know","knew","known"],["learn","learned/learnt","learned/learnt"],["leave","left","left"],
+      ["lend","lent","lent"],["let","let","let"],["lose","lost","lost"],["make","made","made"],["mean","meant","meant"],
+      ["meet","met","met"],["pay","paid","paid"],["put","put","put"],["read","read","read"],["ride","rode","ridden"],
+      ["ring","rang","rung"],["run","ran","run"],["say","said","said"],["see","saw","seen"],["sell","sold","sold"],
+      ["send","sent","sent"],["set","set","set"],["show","showed","shown"],["sing","sang","sung"],["sit","sat","sat"],
+      ["sleep","slept","slept"],["speak","spoke","spoken"],["spend","spent","spent"],["stand","stood","stood"],["swim","swam","swum"],
+      ["take","took","taken"],["teach","taught","taught"],["tell","told","told"],["think","thought","thought"],["understand","understood","understood"],
+      ["wear","wore","worn"],["win","won","won"],["write","wrote","written"]
+    ];
+    const REG=["call","clean","cook","help","like","live","open","play","start","stop","talk","use","walk","work","watch","study","wash","visit","want","look"];
 
-    /* =========================================================
-       2) 상태
-       ========================================================= */
+    const KR={
+      be:"~이다/있다",begin:"시작하다",break:"부수다",bring:"가져오다",build:"짓다",
+      buy:"사다",catch:"잡다",choose:"선택하다",come:"오다",cost:"비용이 들다",
+      cut:"자르다",do:"하다",draw:"그리다",drink:"마시다",drive:"운전하다",
+      eat:"먹다",fall:"떨어지다",feel:"느끼다",find:"찾다",fly:"날다",
+      forget:"잊다",forgive:"용서하다",get:"얻다",give:"주다",go:"가다",
+      grow:"자라다",have:"가지다",hear:"듣다",hide:"숨다",hit:"치다",
+      hold:"잡다",keep:"유지하다",know:"알다",learn:"배우다",leave:"떠나다",
+      lend:"빌려주다",let:"~하게 하다",lose:"잃다",make:"만들다",mean:"의미하다",
+      meet:"만나다",pay:"지불하다",put:"놓다",read:"읽다",ride:"타다",
+      ring:"울리다",run:"달리다",say:"말하다",see:"보다",sell:"팔다",
+      send:"보내다",set:"놓다",show:"보여주다",sing:"노래하다",sit:"앉다",
+      sleep:"자다",speak:"말하다",spend:"쓰다",stand:"서다",swim:"수영하다",
+      take:"가져가다",teach:"가르치다",tell:"말하다",think:"생각하다",understand:"이해하다",
+      wear:"입다",win:"이기다",write:"쓰다",
+      call:"전화하다",clean:"청소하다",cook:"요리하다",help:"돕다",like:"좋아하다",
+      live:"살다",open:"열다",play:"놀다/연주하다",start:"시작하다",stop:"멈추다",
+      talk:"말하다",use:"사용하다",walk:"걷다",work:"일하다",watch:"보다",
+      study:"공부하다",wash:"씻다",visit:"방문하다",want:"원하다",look:"보다"
+    };
+
+    function makeRegular(b){return{base:b,past:b+"ed",pp:b+"ed",pattern:"REG",kr:KR[b]};}
+    const VERBS=[...IRREG.map(([b,p,pp])=>({base:b,past:p,pp,pattern:"IRREG",kr:KR[b]})),...REG.map(makeRegular)];
+
     let currentSet=[],mode="study",iStudy=0,qOrder=[],qi=0,ok=0,no=0,setIndex=0,setSize=20;
 
-    /* =========================================================
-       3) 진행바/통계
-       ========================================================= */
     function updateStats(){const total=currentSet.length;const done=(mode==="quiz")?(ok+no):iStudy;
       $("#ok").textContent=ok;$("#no").textContent=no;$("#left").textContent=total-done;
       $("#progTxt").textContent=`${done}/${total}`;$("#bar").style.width=(total?(done/total*100):0)+"%";}
 
-    /* =========================================================
-       4) 세트 구성
-       ========================================================= */
     function buildSets(){setSize=parseInt($("#setSize").value,10)||20;
       let list=VERBS.slice();list=shuffle(list);
       const total=Math.max(1,Math.ceil(list.length/setSize));
       if(setIndex>=total) setIndex=0;
       $("#setIdx").textContent=setIndex+1;$("#setTotal").textContent=total;
       currentSet=list.slice(setIndex*setSize,setIndex*setSize+setSize);
-      iStudy=0;ok=no=qi=0;
-      showStudyCard();updateStats();}
+      iStudy=0;ok=no=qi=0;showStudyCard();updateStats();}
 
-    /* =========================================================
-       5) 학습 모드
-       ========================================================= */
     function showStudyCard(){if(!currentSet.length){$("#bWord").textContent="(빈 세트)";return;}
       const v=currentSet[iStudy];$("#bWord").textContent=v.base;$("#pBase").textContent=v.base;$("#pPast").textContent=v.past;$("#pPP").textContent=v.pp;$("#krMeaning").textContent="뜻: "+(v.kr||"-");}
     function speakTriple(v){[v.base,v.past,v.pp].forEach(t=>{const u=new SpeechSynthesisUtterance(t);u.lang="en-US";speechSynthesis.speak(u);});}
     function onStudyComplete(){showModal("수고하셨습니다!","이제 퀴즈를 풀어보세요.","퀴즈 시작",()=>{setMode("quiz");startQuizFresh();});}
 
-    /* =========================================================
-       6) 퀴즈 모드
-       ========================================================= */
     function makeOptions(v){const correct={base:v.base,past:v.past,pp:v.pp,ok:true};
       return shuffle([correct,{base:v.base,past:v.past+"d",pp:v.pp+"d",ok:false},{base:v.base,past:v.past+"t",pp:v.pp+"t",ok:false},{base:v.base,past:v.base+"ed",pp:v.base+"ed",ok:false}]);}
     function showQuizCard(){const box=$("#opts");box.innerHTML="";if(qi>=qOrder.length){showModal("세트 완료!",`${ok}정답 / ${no}오답`,"다음 세트",()=>{setIndex++;buildSets();setMode("quiz");});return;}
       const v=currentSet[qOrder[qi]];$("#qBase").textContent=v.base;
       makeOptions(v).forEach(o=>{const d=document.createElement("div");d.className="opt";d.textContent=`${o.base} – ${o.past} – ${o.pp}`;d.onclick=()=>{if(o.ok)ok++;else no++;qi++;showQuizCard();updateStats();};box.appendChild(d);});}
 
-    /* =========================================================
-       7) 모드 전환
-       ========================================================= */
     function setMode(m){mode=m;if(m==="study"){$("#screenStudy").classList.remove("hidden");$("#screenQuiz").classList.add("hidden");}else{$("#screenQuiz").classList.remove("hidden");$("#screenStudy").classList.add("hidden");}updateStats();}
     function startQuizFresh(){qi=0;ok=no=0;qOrder=shuffle([...currentSet.keys()]);showQuizCard();}
-
-    /* =========================================================
-       8) 모달
-       ========================================================= */
     function showModal(t,b,a,f){$("#modalTitle").textContent=t;$("#modalBody").innerHTML=b;$("#btnModalAction").textContent=a;$("#btnModalAction").onclick=()=>{if(f)f();hideModal();};$("#btnModalClose").onclick=hideModal;$("#modal").classList.add("show");}
     function hideModal(){$("#modal").classList.remove("show");}
 
-    /* =========================================================
-       9) 이벤트 바인딩
-       ========================================================= */
     window.addEventListener("DOMContentLoaded",()=>{buildSets();setMode("study");
       $("#btnPlay").onclick=()=>speakTriple(currentSet[iStudy]);
       $("#btnNext").onclick=()=>{iStudy++;if(iStudy>=currentSet.length)onStudyComplete();else showStudyCard();updateStats();};
