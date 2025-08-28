@@ -1,0 +1,12 @@
+[
+  {"base":"be","past":"was/were","pp":"been","kr":"~이다/있다"},
+  {"base":"become","past":"became","pp":"become","kr":"~이 되다"},
+  {"base":"begin","past":"began","pp":"begun","kr":"시작하다"},
+  {"base":"break","past":"broke","pp":"broken","kr":"깨다"},
+  {"base":"bring","past":"brought","pp":"brought","kr":"가져오다"},
+  {"base":"buy","past":"bought","pp":"bought","kr":"사다"},
+  {"base":"cut","past":"cut","pp":"cut","kr":"자르다"},
+  {"base":"eat","past":"ate","pp":"eaten","kr":"먹다"},
+  {"base":"go","past":"went","pp":"gone","kr":"가다"},
+  {"base":"write","past":"wrote","pp":"written","kr":"쓰다"}
+]
