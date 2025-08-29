@@ -1,64 +1,223 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>동사 변형 학습 & 4지선다 퀴즈</title>
+  <style>
+    :root{
+      --bg:#0f172a; --card:#111827; --panel:#1f2937; --text:#e5e7eb; --muted:#9ca3af;
+      --blue:#3b82f6; --green:#22c55e; --red:#ef4444; --amber:#f59e0b;
+      --radius:16px; --shadow:0 6px 18px rgba(0,0,0,.35);
+    }
+    *{box-sizing:border-box;}
+    body{margin:0; font-family:"Noto Sans KR",system-ui,sans-serif; background:var(--bg); color:var(--text);
+      min-height:100vh; display:flex; align-items:center; justify-content:center;}
+    .app{width:min(1000px,94vw); height:min(760px,94vh); display:grid; gap:12px; grid-template-rows:auto auto 1fr auto;}
+    .topbar{display:flex; justify-content:space-between; align-items:center;}
+    .brand{font-weight:800; font-size:20px;}
+    .stats{font-size:14px; color:var(--muted);}
+    .panel{background:var(--panel); border-radius:var(--radius); box-shadow:var(--shadow); padding:12px;}
+    .controls{display:grid; grid-template-columns:repeat(6,1fr); gap:8px;}
+    .controls label{font-size:12px; color:var(--muted);}
+    .controls select,.controls input[type="range"],.controls input[type="checkbox"]{width:100%; background:#0b1220; color:var(--text); border:1px solid #263247; border-radius:10px; padding:6px;}
+    .progress{display:flex; align-items:center; gap:10px; margin-top:10px;}
+    .bar{flex:1; height:12px; background:#0b1220; border:1px solid #263247; border-radius:999px; overflow:hidden;}
+    .bar>i{display:block; height:100%; width:0%; background:linear-gradient(90deg,#2563eb,#22c55e);}
+    .screens{display:flex; gap:12px;}
+    .card{flex:1; background:var(--card); border-radius:var(--radius); padding:16px; box-shadow:var(--shadow); text-align:center;}
+    .prompt-tag{font-size:12px; color:var(--muted); border:1px dashed #334155; padding:2px 8px; border-radius:999px; margin-bottom:8px; display:inline-block;}
+    .word-big{font-size:56px; font-weight:900; margin:8px 0 6px; line-height:1.05;}
+    .mean{margin-top:6px; font-size:22px; color:#e2e8f0;}
+    .triple{display:flex; gap:10px; justify-content:center; margin:10px 0; flex-wrap:wrap;}
+    .pill{padding:10px 16px; border-radius:999px; background:#0b1220; border:1px solid #2a3650; font-weight:800; font-size:20px;}
+    .pill.hl{outline:2px solid var(--blue);}
+    .btn{border:0; border-radius:14px; padding:12px 16px; font-weight:700; cursor:pointer; background:var(--blue); color:white;}
+    .btn.secondary{background:#0b1220; color:var(--text); border:1px solid #2a3650;}
+    .btn.warn{background:var(--amber);}
+    .btn.ghost{background:transparent; border:1px dashed #334155; color:var(--muted);}
+    .right{width:320px; background:var(--card); border-radius:var(--radius); padding:14px; display:flex; flex-direction:column; gap:12px;}
+    .chip{font-size:12px; color:#d1d5db; padding:6px 10px; border-radius:999px; background:#0b1220; border:1px solid #2a3650; cursor:pointer;}
+    .small{font-size:12px; color:var(--muted);}
+    .qopts{display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:10px;}
+    .opt{background:#0b1220; border:1px solid #2a3650; border-radius:14px; padding:14px; cursor:pointer; text-align:left;}
+    .opt .t{font-size:18px; font-weight:800;}
+    .footer{display:flex; justify-content:space-between; align-items:center;}
+    .row{display:flex; gap:8px; flex-wrap:wrap;}
+    .hidden{display:none !important;}
+    .modal{position:fixed; inset:0; display:none; align-items:center; justify-content:center; background:rgba(0,0,0,.5);}
+    .modal.show{display:flex;}
+    .modal .box{background:var(--panel); border-radius:20px; padding:20px; width:min(560px,92vw);}
+    @media (max-width:960px){ .screens{flex-direction:column;} .right{width:100%; order:2} .card{order:1} }
+  </style>
+</head>
+<body>
+<div class="app">
+  <div class="topbar">
+    <div class="brand">동사 변형 학습 · 4지선다 퀴즈</div>
+    <div class="stats">
+      🔊 <label><input type="checkbox" id="mute"/> 음소거</label> ·
+      정답 <span id="ok">0</span> · 오답 <span id="no">0</span> · 남은 <span id="left">0</span> ·
+      세트 <span id="setIdx">1</span>/<span id="setTotal">1</span>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="controls">
+      <div><label>모드</label>
+        <select id="mode"><option value="study">학습</option><option value="quiz">퀴즈</option></select>
+      </div>
+      <div><label>세트 크기</label>
+        <select id="setSize">
+          <option value="10">10</option><option value="20" selected>20</option><option value="30">30</option><option value="40">40</option>
+        </select>
+      </div>
+      <div><label>속도</label>
+        <input type="range" id="rate" min="0.8" max="1.2" step="0.05" value="1.0"/>
+      </div>
+      <div><label><input type="checkbox" id="autoNext"/> 자동 다음</label></div>
+      <div></div><div></div>
+    </div>
+    <div class="progress"><div class="bar"><i id="bar"></i></div><div class="small"><span id="progTxt">0/0</span></div></div>
+  </div>
+
+  <div class="screens">
+    <div class="card">
+      <div class="prompt-tag" id="promptTag">학습 카드</div>
+      <div id="screenStudy">
+        <div class="word-big" id="bWord">ready?</div>
+        <div class="mean" id="krMeaning">뜻: -</div>
+        <div class="triple">
+          <span class="pill" id="pBase">base</span>
+          <span class="pill" id="pPast">past</span>
+          <span class="pill" id="pPP">pp</span>
+        </div>
+        <div class="row" style="margin-top:8px">
+          <button class="btn" id="btnPlay">▶ 읽기</button>
+          <button class="btn secondary" id="btnRepeat">⟳ 반복+자동</button>
+          <button class="btn secondary" id="btnStop">◼ 정지</button>
+          <button class="btn warn" id="btnNext">다음</button>
+          <button class="btn ghost" id="btnPrev">이전</button>
+        </div>
+      </div>
+      <div id="screenQuiz" class="hidden">
+        <div class="word-big" id="qBase">ready?</div>
+        <div class="small">현재형에 맞는 <b>올바른 과거형·과거분사 세트</b>를 고르세요.</div>
+        <div class="qopts" id="opts"></div>
+      </div>
+    </div>
+
+    <aside class="right">
+      <div class="row">
+        <button class="btn ghost" id="btnStartStudy">학습 시작</button>
+        <button class="btn ghost" id="btnStartQuiz">퀴즈 시작</button>
+        <button class="btn ghost" id="btnNextSet">다음 세트 ▶</button>
+      </div>
+      <div>
+        <div class="small">최근 정답</div>
+        <div id="history" class="row"></div>
+      </div>
+      <div>
+        <div class="small">오답 목록 (<span id="wcount">0</span>)</div>
+        <div id="wrongs" class="row"></div>
+      </div>
+      <div class="small">단축키: ␣(읽기/정지), ←/→(이전/다음), Q(퀴즈시작), S(학습시작)</div>
+    </aside>
+  </div>
+
+  <div class="footer">
+    <div class="left">
+      <button class="btn ghost" id="btnReset">초기화</button>
+      <button class="btn ghost" id="btnWrongOnly">오답만</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="modal"><div class="box">
+  <h3 id="modalTitle">알림</h3><div id="modalBody" class="small"></div>
+  <div class="row" style="margin-top:12px; justify-content:flex-end">
+    <button class="btn secondary" id="btnModalClose">닫기</button>
+    <button class="btn" id="btnModalAction">확인</button>
+  </div>
+</div></div>
+
 <script>
-let VERBS = [];   // 외부 JSON에서 불러올 것
+const $=s=>document.querySelector(s);
+const $$=s=>document.querySelectorAll(s);
+const shuffle=a=>{for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;};
+
+let VERBS=[];
 let setSize=20,setIndex=0,currentSet=[],mode="study";
 let iStudy=0, qi=0, ok=0, no=0, wrongList=[], history=[];
 
-/* 기존 함수들 (updateStats, showStudyCard, speakTriple, showQuizCard 등등) 그대로 둡니다 */
+/* ====== 함수들 (updateStats, showStudyCard 등) ====== */
+// (여기서는 분량 때문에 생략했지만, 앞서 쓰던 updateStats, renderHistory, renderWrongs, 
+// buildSets, showStudyCard, speakTriple, onStudyComplete, makeOptions, showQuizCard, setMode, 
+// startQuizFresh, showModal, hideModal 등 그대로 가져오시면 됩니다)
 
-/* ---------- Init ---------- */
-window.addEventListener("DOMContentLoaded",()=>{
+/* ====== 안전 바인딩 유틸 ====== */
+function on(id, ev, fn){
+  const el = document.getElementById(id);
+  if(!el) return null;
+  el.addEventListener(ev, fn);
+  return el;
+}
+
+/* ====== 초기화 ====== */
+document.addEventListener("DOMContentLoaded", () => {
+  // 동사 데이터 JSON 불러오기
   fetch("verbs.json")
     .then(res => res.json())
     .then(data => {
       VERBS = data;
       buildSets();
       setMode("study");
-      bindEvents();   // 버튼/단축키 이벤트 등록
-    })
-    .catch(err => console.error("verbs.json 불러오기 실패:", err));
-});
+    });
 
-function bindEvents(){
-  $("#btnPlay").onclick=()=>{ if(currentSet.length) speakTriple(currentSet[iStudy],parseFloat($("#rate").value),false); };
-  $("#btnRepeat").onclick=()=>{ if(currentSet.length) speakTriple(currentSet[iStudy],parseFloat($("#rate").value),true); };
-  $("#btnStop").onclick=()=>speechSynthesis.cancel();
-  $("#btnNext").onclick=()=>{ speechSynthesis.cancel(); iStudy++; if(iStudy>=currentSet.length) onStudyComplete(); else showStudyCard(); updateStats(); };
-  $("#btnPrev").onclick=()=>{ speechSynthesis.cancel(); iStudy=Math.max(iStudy-1,0); showStudyCard(); updateStats(); };
+  // 버튼/셀렉터 이벤트 연결
+  on("btnPlay","click",()=>{ if(currentSet.length) speakTriple(currentSet[iStudy], parseFloat($("#rate").value), false); });
+  on("btnRepeat","click",()=>{ if(currentSet.length) speakTriple(currentSet[iStudy], parseFloat($("#rate").value), true); });
+  on("btnStop","click",()=>speechSynthesis.cancel());
+  on("btnNext","click",()=>{ speechSynthesis.cancel(); iStudy++; if(iStudy>=currentSet.length) onStudyComplete(); else showStudyCard(); updateStats(); });
+  on("btnPrev","click",()=>{ speechSynthesis.cancel(); iStudy=Math.max(iStudy-1,0); showStudyCard(); updateStats(); });
 
-  $("#btnStartStudy").onclick=()=>{
+  on("btnStartStudy","click",()=>{
     setMode("study");
-    iStudy=0;
-    showStudyCard();
-    updateStats();
+    iStudy=0; showStudyCard(); updateStats();
     if(currentSet.length){
-      speakTriple(currentSet[iStudy], parseFloat($("#rate").value), $("#autoNext").checked);
-    }
-  };
-  $("#btnStartQuiz").onclick=()=>startQuizFresh();
-  $("#btnNextSet").onclick=()=>{ setIndex++; buildSets(); setMode($("#mode").value); };
-  $("#btnReset").onclick=()=>{ setIndex=0; buildSets(); setMode("study"); };
-  $("#btnWrongOnly").onclick=()=>{ if(!wrongList.length){ alert("오답 없음"); return; }
-    currentSet=shuffle(wrongList.slice()); wrongList=[]; ok=0; no=0; qi=0; setMode("quiz"); showQuizCard(); renderWrongs(); updateStats(); };
-
-  $("#mode").addEventListener("change", e=>{
-    setMode(e.target.value);
-    if(e.target.value==="study" && currentSet.length){
-      speakTriple(currentSet[iStudy], parseFloat($("#rate").value), $("#autoNext").checked);
+      speakTriple(currentSet[iStudy], parseFloat($("#rate").value), $("#autoNext")?.checked);
     }
   });
-  $("#setSize").addEventListener("change",()=>{
+  on("btnStartQuiz","click",()=>startQuizFresh());
+  on("btnNextSet","click",()=>{ setIndex++; buildSets(); setMode($("#mode")?.value ?? "study"); });
+  on("btnReset","click",()=>{ setIndex=0; buildSets(); setMode("study"); });
+  on("btnWrongOnly","click",()=>{
+    if(!wrongList.length){ alert("오답 없음"); return; }
+    currentSet=shuffle(wrongList.slice()); wrongList=[]; ok=0; no=0; qi=0;
+    setMode("quiz"); showQuizCard(); renderWrongs(); updateStats();
+  });
+
+  on("mode","change",(e)=>{
+    setMode(e.target.value);
+    if(e.target.value==="study" && currentSet.length){
+      speakTriple(currentSet[iStudy], parseFloat($("#rate").value), $("#autoNext")?.checked);
+    }
+  });
+  on("setSize","change",()=>{
     buildSets();
-    setMode($("#mode").value);
+    setMode($("#mode")?.value ?? "study");
   });
 
   // 단축키
   window.addEventListener("keydown",(e)=>{
     if(e.target.tagName==="INPUT" || e.target.tagName==="SELECT") return;
-    if(e.code==="Space"){ e.preventDefault(); if(speechSynthesis.speaking) speechSynthesis.cancel(); else if(mode==="study") $("#btnPlay").click(); }
-    if(e.key==="ArrowRight"){ $("#btnNext").click(); }
-    if(e.key==="ArrowLeft"){ $("#btnPrev").click(); }
-    if(e.key.toLowerCase()==="q"){ $("#btnStartQuiz").click(); }
-    if(e.key.toLowerCase()==="s"){ $("#btnStartStudy").click(); }
+    if(e.code==="Space"){ e.preventDefault(); if(speechSynthesis.speaking) speechSynthesis.cancel(); else if(mode==="study") $("#btnPlay")?.click(); }
+    if(e.key==="ArrowRight"){ $("#btnNext")?.click(); }
+    if(e.key==="ArrowLeft"){ $("#btnPrev")?.click(); }
+    if(e.key.toLowerCase()==="q"){ $("#btnStartQuiz")?.click(); }
+    if(e.key.toLowerCase()==="s"){ $("#btnStartStudy")?.click(); }
   });
-}
+});
 </script>
+</body>
+</html>
