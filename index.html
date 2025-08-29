@@ -3,219 +3,404 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>동사 변형 학습 & 4지선다 퀴즈</title>
+  <title>수브레인 동사변형 학습</title>
   <style>
     :root{
-      --bg:#0f172a; --card:#111827; --panel:#1f2937; --text:#e5e7eb; --muted:#9ca3af;
-      --blue:#3b82f6; --green:#22c55e; --red:#ef4444; --amber:#f59e0b;
-      --radius:16px; --shadow:0 6px 18px rgba(0,0,0,.35);
+      --bg:#0f172a; --card:#0b1220; --panel:#111827; --text:#e5e7eb; --muted:#9ca3af;
+      --blue:#3b82f6; --amber:#f59e0b; --radius:18px; --shadow:0 10px 30px rgba(0,0,0,.35);
     }
-    *{box-sizing:border-box;}
-    body{margin:0; font-family:"Noto Sans KR",system-ui,sans-serif; background:var(--bg); color:var(--text);
-      min-height:100vh; display:flex; align-items:center; justify-content:center;}
-    .app{width:min(1000px,94vw); height:min(760px,94vh); display:grid; gap:12px; grid-template-rows:auto auto 1fr auto;}
-    .topbar{display:flex; justify-content:space-between; align-items:center;}
-    .brand{font-weight:800; font-size:20px;}
-    .stats{font-size:14px; color:var(--muted);}
-    .panel{background:var(--panel); border-radius:var(--radius); box-shadow:var(--shadow); padding:12px;}
-    .controls{display:grid; grid-template-columns:repeat(6,1fr); gap:8px;}
-    .controls label{font-size:12px; color:var(--muted);}
-    .controls select,.controls input[type="range"],.controls input[type="checkbox"]{width:100%; background:#0b1220; color:var(--text); border:1px solid #263247; border-radius:10px; padding:6px;}
-    .progress{display:flex; align-items:center; gap:10px; margin-top:10px;}
-    .bar{flex:1; height:12px; background:#0b1220; border:1px solid #263247; border-radius:999px; overflow:hidden;}
-    .bar>i{display:block; height:100%; width:0%; background:linear-gradient(90deg,#2563eb,#22c55e);}
-    .screens{display:flex; gap:12px;}
-    .card{flex:1; background:var(--card); border-radius:var(--radius); padding:16px; box-shadow:var(--shadow); text-align:center;}
-    .prompt-tag{font-size:12px; color:var(--muted); border:1px dashed #334155; padding:2px 8px; border-radius:999px; margin-bottom:8px; display:inline-block;}
-    .word-big{font-size:56px; font-weight:900; margin:8px 0 6px; line-height:1.05;}
+    *{box-sizing:border-box}
+    body{
+      margin:0; font-family:"Noto Sans KR",system-ui,Segoe UI,Roboto,Apple SD Gothic Neo,Malgun Gothic,sans-serif;
+      background:radial-gradient(1200px 700px at 20% -10%, #0b1730 0%, #0f172a 35%, #0f172a 100%);
+      color:var(--text); min-height:100vh; display:flex; align-items:center; justify-content:center; padding:24px;
+    }
+    .wrap{width:min(1100px,96vw); display:grid; gap:16px}
+
+    /* 헤더 */
+    .brand{
+      display:flex; align-items:baseline; justify-content:space-between; gap:16px;
+      background:linear-gradient(180deg, rgba(59,130,246,.12), rgba(59,130,246,.0));
+      border:1px solid #1f2a44; border-radius:28px; padding:18px 22px; box-shadow:var(--shadow);
+    }
+    .brand .title{
+      font-weight:900; line-height:1.05; font-size: clamp(28px, 6vw, 54px); letter-spacing:-0.5px;
+      background:linear-gradient(92deg,#e2e8f0 0%, #93c5fd 35%, #e2e8f0 85%);
+      -webkit-background-clip:text; background-clip:text; color:transparent; text-shadow: 0 6px 36px rgba(37,99,235,.25);
+    }
+    .brand .subtitle{ font-size: clamp(12px, 2.4vw, 16px); color:#cbd5e1; opacity:.9; }
+
+    .top{display:flex; justify-content:flex-end; gap:10px}
+    .mode-switch,.ghost{
+      background:var(--panel); border:1px solid #23314f; color:var(--text);
+      padding:10px 14px; border-radius:999px; cursor:pointer; font-weight:700; box-shadow: inset 0 0 0 1px rgba(255,255,255,0.03);
+    }
+    .mode-switch.active{outline:2px solid rgba(96,165,250,.6)}
+
+    /* 카드 */
+    .card{background:var(--card); border-radius:var(--radius); padding:18px 16px; text-align:center; box-shadow:var(--shadow); border:1px solid #1b2742;}
+    .prompt{font-size:12px;color:var(--muted);border:1px dashed #334155;padding:3px 10px;border-radius:999px;display:inline-block;margin-bottom:10px}
+    .word-big{font-size: clamp(40px, 7.2vw, 58px); font-weight:900; margin:10px 0 8px; line-height:1.05;}
     .mean{margin-top:6px; font-size:22px; color:#e2e8f0;}
-    .triple{display:flex; gap:10px; justify-content:center; margin:10px 0; flex-wrap:wrap;}
-    .pill{padding:10px 16px; border-radius:999px; background:#0b1220; border:1px solid #2a3650; font-weight:800; font-size:20px;}
-    .pill.hl{outline:2px solid var(--blue);}
-    .btn{border:0; border-radius:14px; padding:12px 16px; font-weight:700; cursor:pointer; background:var(--blue); color:white;}
+    .triple{display:flex; gap:12px; justify-content:center; margin:12px 0; flex-wrap:wrap;}
+    .pill{padding:10px 16px; border-radius:999px; background:rgba(15,23,42,.6); border:1px solid #2a3650; font-weight:800; font-size:20px;}
+    .pill.hl{outline:2px solid var(--blue); box-shadow:0 0 0 6px rgba(59,130,246,.12)}
+    .row{display:flex; gap:10px; justify-content:center; flex-wrap:wrap}
+    .btn{border:0; border-radius:12px; padding:11px 16px; font-weight:800; cursor:pointer; background:var(--blue); color:white;}
     .btn.secondary{background:#0b1220; color:var(--text); border:1px solid #2a3650;}
     .btn.warn{background:var(--amber);}
-    .btn.ghost{background:transparent; border:1px dashed #334155; color:var(--muted);}
-    .right{width:320px; background:var(--card); border-radius:var(--radius); padding:14px; display:flex; flex-direction:column; gap:12px;}
-    .chip{font-size:12px; color:#d1d5db; padding:6px 10px; border-radius:999px; background:#0b1220; border:1px solid #2a3650; cursor:pointer;}
-    .small{font-size:12px; color:var(--muted);}
+    .hidden{display:none !important}
     .qopts{display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:10px;}
     .opt{background:#0b1220; border:1px solid #2a3650; border-radius:14px; padding:14px; cursor:pointer; text-align:left;}
     .opt .t{font-size:18px; font-weight:800;}
-    .footer{display:flex; justify-content:space-between; align-items:center;}
-    .row{display:flex; gap:8px; flex-wrap:wrap;}
-    .hidden{display:none !important;}
-    .modal{position:fixed; inset:0; display:none; align-items:center; justify-content:center; background:rgba(0,0,0,.5);}
+    .stats{font-size:13px;color:#cbd5e1;text-align:center;margin-top:6px}
+
+    /* 세트 선택 모달 */
+    .modal{position:fixed; inset:0; display:none; align-items:center; justify-content:center; background:rgba(0,0,0,.45);}
     .modal.show{display:flex;}
-    .modal .box{background:var(--panel); border-radius:20px; padding:20px; width:min(560px,92vw);}
-    @media (max-width:960px){ .screens{flex-direction:column;} .right{width:100%; order:2} .card{order:1} }
+    .box{background:var(--panel); border:1px solid #1f2a44; border-radius:22px; padding:18px; width:min(680px,94vw); box-shadow:var(--shadow);}
+    .box h2{margin:0 0 10px; font-size:22px}
+    .grid{display:grid; grid-template-columns:repeat(4,1fr); gap:10px}
+    .setbtn{background:#0b1220; border:1px solid #2a3650; color:#e5e7eb; border-radius:14px; padding:14px; cursor:pointer; font-weight:800;}
+    .setbtn:hover{outline:2px solid rgba(59,130,246,.5)}
+    @media (max-width:560px){ .grid{grid-template-columns:repeat(2,1fr)} }
   </style>
 </head>
 <body>
-<div class="app">
-  <div class="topbar">
-    <div class="brand">동사 변형 학습 · 4지선다 퀴즈</div>
-    <div class="stats">
-      🔊 <label><input type="checkbox" id="mute"/> 음소거</label> ·
-      정답 <span id="ok">0</span> · 오답 <span id="no">0</span> · 남은 <span id="left">0</span> ·
-      세트 <span id="setIdx">1</span>/<span id="setTotal">1</span>
+<div class="wrap">
+
+  <header class="brand">
+    <div>
+      <div class="title">수브레인 동사변형 학습</div>
+      <div class="subtitle">Irregular & Regular Verb Forms · Study + 4-Choice Quiz</div>
     </div>
+    <div class="row">
+      <button id="btnOpenPicker" class="ghost" title="세트 선택">세트 선택</button>
+    </div>
+  </header>
+
+  <div class="top">
+    <button id="btnModeStudy" class="mode-switch active" aria-pressed="true">학습</button>
+    <button id="btnModeQuiz" class="mode-switch" aria-pressed="false">퀴즈</button>
   </div>
 
-  <div class="panel">
-    <div class="controls">
-      <div><label>모드</label>
-        <select id="mode"><option value="study">학습</option><option value="quiz">퀴즈</option></select>
-      </div>
-      <div><label>세트 크기</label>
-        <select id="setSize">
-          <option value="10">10</option><option value="20" selected>20</option><option value="30">30</option><option value="40">40</option>
-        </select>
-      </div>
-      <div><label>속도</label>
-        <input type="range" id="rate" min="0.8" max="1.2" step="0.05" value="1.0"/>
-      </div>
-      <div><label><input type="checkbox" id="autoNext"/> 자동 다음</label></div>
-      <div></div><div></div>
+  <!-- 학습 카드 -->
+  <section id="screenStudy" class="card" aria-live="polite">
+    <div class="prompt">학습 · <span id="setLabel">세트 1</span></div>
+    <div class="word-big" id="bWord">ready?</div>
+    <div class="mean" id="krMeaning">뜻: -</div>
+    <div class="triple" role="list">
+      <span class="pill" id="pBase" role="listitem">base</span>
+      <span class="pill" id="pPast" role="listitem">past</span>
+      <span class="pill" id="pPP" role="listitem">pp</span>
     </div>
-    <div class="progress"><div class="bar"><i id="bar"></i></div><div class="small"><span id="progTxt">0/0</span></div></div>
-  </div>
-
-  <div class="screens">
-    <div class="card">
-      <div class="prompt-tag" id="promptTag">학습 카드</div>
-      <div id="screenStudy">
-        <div class="word-big" id="bWord">ready?</div>
-        <div class="mean" id="krMeaning">뜻: -</div>
-        <div class="triple">
-          <span class="pill" id="pBase">base</span>
-          <span class="pill" id="pPast">past</span>
-          <span class="pill" id="pPP">pp</span>
-        </div>
-        <div class="row" style="margin-top:8px">
-          <button class="btn" id="btnPlay">▶ 읽기</button>
-          <button class="btn secondary" id="btnRepeat">⟳ 반복+자동</button>
-          <button class="btn secondary" id="btnStop">◼ 정지</button>
-          <button class="btn warn" id="btnNext">다음</button>
-          <button class="btn ghost" id="btnPrev">이전</button>
-        </div>
-      </div>
-      <div id="screenQuiz" class="hidden">
-        <div class="word-big" id="qBase">ready?</div>
-        <div class="small">현재형에 맞는 <b>올바른 과거형·과거분사 세트</b>를 고르세요.</div>
-        <div class="qopts" id="opts"></div>
-      </div>
+    <div class="row" style="margin-top:8px">
+      <button class="btn secondary" id="btnPlay">▶ 읽기</button>
+      <button class="btn secondary" id="btnStop">◼ 정지</button>
+      <button class="btn warn" id="btnNext">다음</button>
+      <button class="btn secondary" id="btnPrev">이전</button>
+      <label style="display:flex;align-items:center;gap:6px;color:#cbd5e1">
+        <input type="checkbox" id="mute"/> 음소거
+      </label>
+      <label style="display:flex;align-items:center;gap:6px;color:#cbd5e1">
+        속도 <input type="range" id="rate" min="0.8" max="1.2" step="0.05" value="1.0"/>
+      </label>
     </div>
+    <div class="stats">정답 <span id="ok">0</span> · 오답 <span id="no">0</span> · 남은 <span id="left">0</span></div>
+  </section>
 
-    <aside class="right">
-      <div class="row">
-        <button class="btn ghost" id="btnStartStudy">학습 시작</button>
-        <button class="btn ghost" id="btnStartQuiz">퀴즈 시작</button>
-        <button class="btn ghost" id="btnNextSet">다음 세트 ▶</button>
-      </div>
-      <div>
-        <div class="small">최근 정답</div>
-        <div id="history" class="row"></div>
-      </div>
-      <div>
-        <div class="small">오답 목록 (<span id="wcount">0</span>)</div>
-        <div id="wrongs" class="row"></div>
-      </div>
-      <div class="small">단축키: ␣(읽기/정지), ←/→(이전/다음), Q(퀴즈시작), S(학습시작)</div>
-    </aside>
-  </div>
+  <!-- 퀴즈 카드 -->
+  <section id="screenQuiz" class="card hidden" aria-live="polite">
+    <div class="prompt">퀴즈 · <span id="setLabelQuiz">세트 1</span></div>
+    <div class="word-big" id="qBase">ready?</div>
+    <div class="stats" style="margin-top:4px">현재형에 맞는 <b>올바른 과거형·과거분사 세트</b>를 고르세요.</div>
+    <div class="qopts" id="opts"></div>
+    <div class="row" style="margin-top:10px">
+      <button class="btn secondary" id="btnToStudy">학습으로</button>
+    </div>
+    <div class="stats">정답 <span id="ok2">0</span> · 오답 <span id="no2">0</span> · 남은 <span id="left2">0</span></div>
+  </section>
 
-  <div class="footer">
-    <div class="left">
-      <button class="btn ghost" id="btnReset">초기화</button>
-      <button class="btn ghost" id="btnWrongOnly">오답만</button>
+</div>
+
+<!-- 세트 선택 모달 -->
+<div id="picker" class="modal" aria-modal="true" role="dialog">
+  <div class="box">
+    <h2>세트를 선택하세요</h2>
+    <div id="setGrid" class="grid"></div>
+    <div class="row" style="justify-content:flex-end; margin-top:10px">
+      <button id="closePicker" class="ghost">닫기</button>
     </div>
   </div>
 </div>
 
-<div class="modal" id="modal"><div class="box">
-  <h3 id="modalTitle">알림</h3><div id="modalBody" class="small"></div>
-  <div class="row" style="margin-top:12px; justify-content:flex-end">
-    <button class="btn secondary" id="btnModalClose">닫기</button>
-    <button class="btn" id="btnModalAction">확인</button>
-  </div>
-</div></div>
-
 <script>
+/* ===== 유틸 ===== */
 const $=s=>document.querySelector(s);
 const $$=s=>document.querySelectorAll(s);
 const shuffle=a=>{for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;};
+const showPicker=()=>$("#picker").classList.add("show");
+const hidePicker=()=>$("#picker").classList.remove("show");
 
-let VERBS=[];
-let setSize=20,setIndex=0,currentSet=[],mode="study";
-let iStudy=0, qi=0, ok=0, no=0, wrongList=[], history=[];
-
-/* ====== 함수들 (updateStats, showStudyCard 등) ====== */
-// (여기서는 분량 때문에 생략했지만, 앞서 쓰던 updateStats, renderHistory, renderWrongs, 
-// buildSets, showStudyCard, speakTriple, onStudyComplete, makeOptions, showQuizCard, setMode, 
-// startQuizFresh, showModal, hideModal 등 그대로 가져오시면 됩니다)
-
-/* ====== 안전 바인딩 유틸 ====== */
-function on(id, ev, fn){
-  const el = document.getElementById(id);
-  if(!el) return null;
-  el.addEventListener(ev, fn);
-  return el;
+/* ===== 효과음(mp3) ===== */
+const sfxOK = new Audio("audio/correct.mp3");
+const sfxNO = new Audio("audio/wrong.mp3");
+sfxOK.volume = 0.7; sfxNO.volume = 0.7;
+function playOK(){ try{ sfxOK.currentTime=0; sfxOK.play(); }catch(e){} }
+function playNO(){ try{ sfxNO.currentTime=0; sfxNO.play(); }catch(e){} }
+function stopAllAudio(){
+  try{ speechSynthesis.cancel(); }catch(e){}
+  [sfxOK,sfxNO].forEach(a=>{ try{ a.pause(); a.currentTime=0; }catch(e){} });
 }
 
-/* ====== 초기화 ====== */
-document.addEventListener("DOMContentLoaded", () => {
-  // 동사 데이터 JSON 불러오기
-  fetch("verbs.json")
-    .then(res => res.json())
-    .then(data => {
-      VERBS = data;
-      buildSets();
-      setMode("study");
-    });
+/* ===== 데이터 ===== */
+const VERBS=[{"base":"be","past":"was/were","pp":"been","kr":"~이다/있다"},{"base":"become","past":"became","pp":"become","kr":"~이 되다"},{"base":"begin","past":"began","pp":"begun","kr":"시작하다"},{"base":"break","past":"broke","pp":"broken","kr":"깨다"},{"base":"bring","past":"brought","pp":"brought","kr":"가져오다"},{"base":"build","past":"built","pp":"built","kr":"짓다"},{"base":"buy","past":"bought","pp":"bought","kr":"사다"},{"base":"catch","past":"caught","pp":"caught","kr":"잡다"},{"base":"choose","past":"chose","pp":"chosen","kr":"고르다"},{"base":"come","past":"came","pp":"come","kr":"오다"},{"base":"cost","past":"cost","pp":"cost","kr":"비용이 들다"},{"base":"cut","past":"cut","pp":"cut","kr":"자르다"},{"base":"do","past":"did","pp":"done","kr":"하다"},{"base":"draw","past":"drew","pp":"drawn","kr":"그리다"},{"base":"drink","past":"drank","pp":"drunk","kr":"마시다"},{"base":"drive","past":"drove","pp":"driven","kr":"운전하다"},{"base":"eat","past":"ate","pp":"eaten","kr":"먹다"},{"base":"fall","past":"fell","pp":"fallen","kr":"떨어지다"},{"base":"feel","past":"felt","pp":"felt","kr":"느끼다"},{"base":"fight","past":"fought","pp":"fought","kr":"싸우다"},{"base":"find","past":"found","pp":"found","kr":"찾다"},{"base":"fly","past":"flew","pp":"flown","kr":"날다"},{"base":"forget","past":"forgot","pp":"forgotten","kr":"잊다"},{"base":"forgive","past":"forgave","pp":"forgiven","kr":"용서하다"},{"base":"get","past":"got","pp":"got/gotten","kr":"얻다/되다"},{"base":"give","past":"gave","pp":"given","kr":"주다"},{"base":"go","past":"went","pp":"gone","kr":"가다"},{"base":"grow","past":"grew","pp":"grown","kr":"자라다"},{"base":"hang","past":"hung","pp":"hung","kr":"걸다"},{"base":"have","past":"had","pp":"had","kr":"가지다"},{"base":"hear","past":"heard","pp":"heard","kr":"듣다"},{"base":"hide","past":"hid","pp":"hidden","kr":"숨다"},{"base":"hit","past":"hit","pp":"hit","kr":"치다"},{"base":"hold","past":"held","pp":"held","kr":"잡다/개최하다"},{"base":"keep","past":"kept","pp":"kept","kr":"지키다/유지하다"},{"base":"know","past":"knew","pp":"known","kr":"알다"},{"base":"leave","past":"left","pp":"left","kr":"떠나다/남기다"},{"base":"lend","past":"lent","pp":"lent","kr":"빌려주다"},{"base":"let","past":"let","pp":"let","kr":"~하게 하다"},{"base":"lose","past":"lost","pp":"lost","kr":"잃다"},{"base":"make","past":"made","pp":"made","kr":"만들다"},{"base":"meet","past":"met","pp":"met","kr":"만나다"},{"base":"pay","past":"paid","pp":"paid","kr":"지불하다"},{"base":"put","past":"put","pp":"put","kr":"놓다"},{"base":"read","past":"read","pp":"read","kr":"읽다(발음:red)"},{"base":"ride","past":"rode","pp":"ridden","kr":"타다"},{"base":"ring","past":"rang","pp":"rung","kr":"울리다"},{"base":"run","past":"ran","pp":"run","kr":"달리다"},{"base":"say","past":"said","pp":"said","kr":"말하다"},{"base":"see","past":"saw","pp":"seen","kr":"보다"},{"base":"sell","past":"sold","pp":"sold","kr":"팔다"},{"base":"send","past":"sent","pp":"sent","kr":"보내다"},{"base":"show","past":"showed","pp":"shown","kr":"보여주다"},{"base":"sing","past":"sang","pp":"sung","kr":"노래하다"},{"base":"sit","past":"sat","pp":"sat","kr":"앉다"},{"base":"sleep","past":"slept","pp":"slept","kr":"자다"},{"base":"speak","past":"spoke","pp":"spoken","kr":"말하다"},{"base":"spend","past":"spent","pp":"spent","kr":"쓰다/보내다"},{"base":"stand","past":"stood","pp":"stood","kr":"서다"},{"base":"swim","past":"swam","pp":"swum","kr":"수영하다"},{"base":"take","past":"took","pp":"taken","kr":"가지고 가다"},{"base":"teach","past":"taught","pp":"taught","kr":"가르치다"},{"base":"tell","past":"told","pp":"told","kr":"말해주다"},{"base":"think","past":"thought","pp":"thought","kr":"생각하다"},{"base":"understand","past":"understood","pp":"understood","kr":"이해하다"},{"base":"wear","past":"wore","pp":"worn","kr":"입다"},{"base":"win","past":"won","pp":"won","kr":"이기다"},{"base":"write","past":"wrote","pp":"written","kr":"쓰다"},{"base":"open","past":"opened","pp":"opened","kr":"열다"},{"base":"close","past":"closed","pp":"closed","kr":"닫다"},{"base":"play","past":"played","pp":"played","kr":"놀다/연주하다"},{"base":"work","past":"worked","pp":"worked","kr":"일하다"},{"base":"study","past":"studied","pp":"studied","kr":"공부하다"},{"base":"watch","past":"watched","pp":"watched","kr":"보다"},{"base":"walk","past":"walked","pp":"walked","kr":"걷다"},{"base":"wash","past":"washed","pp":"washed","kr":"씻다"},{"base":"visit","past":"visited","pp":"visited","kr":"방문하다"},{"base":"help","past":"helped","pp":"helped","kr":"돕다"},{"base":"cook","past":"cooked","pp":"cooked","kr":"요리하다"},{"base":"clean","past":"cleaned","pp":"cleaned","kr":"청소하다"},{"base":"move","past":"moved","pp":"moved","kr":"이동/이사하다"},{"base":"live","past":"lived","pp":"lived","kr":"살다"},{"base":"love","past":"loved","pp":"loved","kr":"사랑하다"},{"base":"need","past":"needed","pp":"needed","kr":"필요하다"},{"base":"call","past":"called","pp":"called","kr":"전화하다"},{"base":"use","past":"used","pp":"used","kr":"사용하다"},{"base":"finish","past":"finished","pp":"finished","kr":"끝내다"},{"base":"plan","past":"planned","pp":"planned","kr":"계획하다"},{"base":"ask","past":"asked","pp":"asked","kr":"묻다/요청하다"},{"base":"answer","past":"answered","pp":"answered","kr":"답하다"},{"base":"start","past":"started","pp":"started","kr":"시작하다"},{"base":"stop","past":"stopped","pp":"stopped","kr":"멈추다"},{"base":"practice","past":"practiced","pp":"practiced","kr":"연습하다"},{"base":"save","past":"saved","pp":"saved","kr":"저축/저장하다"},{"base":"borrow","past":"borrowed","pp":"borrowed","kr":"빌리다"},{"base":"travel","past":"traveled","pp":"traveled","kr":"여행하다"},{"base":"climb","past":"climbed","pp":"climbed","kr":"오르다"},{"base":"paint","past":"painted","pp":"painted","kr":"색칠하다"},{"base":"dance","past":"danced","pp":"danced","kr":"춤추다"},{"base":"hope","past":"hoped","pp":"hoped","kr":"희망하다"},{"base":"carry","past":"carried","pp":"carried","kr":"나르다"},{"base":"cry","past":"cried","pp":"cried","kr":"울다"},{"base":"try","past":"tried","pp":"tried","kr":"시도하다"},{"base":"enjoy","past":"enjoyed","pp":"enjoyed","kr":"즐기다"},{"base":"decide","past":"decided","pp":"decided","kr":"결정하다"},{"base":"invite","past":"invited","pp":"invited","kr":"초대하다"},{"base":"mail","past":"mailed","pp":"mailed","kr":"우편 보내다"},{"base":"text","past":"texted","pp":"texted","kr":"문자 보내다"},{"base":"email","past":"emailed","pp":"emailed","kr":"이메일 보내다"},{"base":"fix","past":"fixed","pp":"fixed","kr":"고치다"},{"base":"check","past":"checked","pp":"checked","kr":"확인하다"},{"base":"join","past":"joined","pp":"joined","kr":"참가하다"},{"base":"share","past":"shared","pp":"shared","kr":"공유하다"},{"base":"order","past":"ordered","pp":"ordered","kr":"주문하다"},{"base":"plant","past":"planted","pp":"planted","kr":"심다"}];
 
-  // 버튼/셀렉터 이벤트 연결
-  on("btnPlay","click",()=>{ if(currentSet.length) speakTriple(currentSet[iStudy], parseFloat($("#rate").value), false); });
-  on("btnRepeat","click",()=>{ if(currentSet.length) speakTriple(currentSet[iStudy], parseFloat($("#rate").value), true); });
-  on("btnStop","click",()=>speechSynthesis.cancel());
-  on("btnNext","click",()=>{ speechSynthesis.cancel(); iStudy++; if(iStudy>=currentSet.length) onStudyComplete(); else showStudyCard(); updateStats(); });
-  on("btnPrev","click",()=>{ speechSynthesis.cancel(); iStudy=Math.max(iStudy-1,0); showStudyCard(); updateStats(); });
+/* ===== 상태 ===== */
+let mode="study";
+let setSize=20;
+let setIndex=0;              // 세트 인덱스(0..)
+let MASTER=[];               // 세션 고정 순서
+let currentSet=[], iStudy=0;
+let qi=0, ok=0, no=0;
+let didInitialRead=false;
+let wrongList=[];            // 현재 세트 오답
+let allWrongs=[];            // 누적 오답
 
-  on("btnStartStudy","click",()=>{
+/* ===== 통계 ===== */
+function updateStats(){
+  const total=currentSet.length||0;
+  const left = (mode==="quiz") ? Math.max(total - (ok+no), 0) : Math.max(total - iStudy, 0);
+  $("#ok").textContent=ok; $("#no").textContent=no; $("#left").textContent=left;
+  $("#ok2").textContent=ok; $("#no2").textContent=no; $("#left2").textContent=left;
+}
+
+/* ===== 세트 구성/선택 ===== */
+function buildMasterOnce(){ if(MASTER.length) return; MASTER = VERBS.slice(); }
+function totalSets(){ return Math.ceil(MASTER.length/setSize) || 1; }
+
+function renderSetPicker(){
+  const grid=$("#setGrid"); grid.innerHTML="";
+  const n = totalSets();
+  for(let i=0;i<n;i++){
+    const btn=document.createElement("button");
+    btn.className="setbtn";
+    const from=i*setSize+1, to=Math.min((i+1)*setSize, MASTER.length);
+    btn.textContent = `세트 ${i+1} · ${from}–${to}`;
+    btn.onclick = ()=>{ selectSet(i); hidePicker(); };
+    grid.appendChild(btn);
+  }
+}
+
+function selectSet(idx){
+  setIndex = idx;
+  buildSets();
+  setMode("study");
+  if(currentSet.length) speakTriple(currentSet[iStudy], parseFloat($("#rate").value)||1.0);
+}
+
+function buildSets(){
+  buildMasterOnce();
+  const total = totalSets();
+  if(setIndex >= total){ setIndex = total-1; alert("모든 세트를 완료했습니다!"); }
+  const from = setIndex*setSize, to = from + setSize;
+  currentSet = MASTER.slice(from, to);
+  iStudy=0; qi=0; ok=0; no=0; wrongList=[];
+  const label = `세트 ${setIndex+1}`;
+  $("#setLabel").textContent = label;
+  $("#setLabelQuiz").textContent = label;
+  showStudyCard();
+  updateStats();
+}
+
+/* ===== 학습 카드 ===== */
+function showStudyCard(){
+  if(!currentSet.length){ $("#bWord").textContent="(빈 세트)"; $("#krMeaning").textContent="뜻: -"; return; }
+  const v=currentSet[iStudy]||currentSet[currentSet.length-1];
+  $("#bWord").textContent=v.base;
+  $("#pBase").textContent=v.base; $("#pPast").textContent=v.past; $("#pPP").textContent=v.pp;
+  $("#krMeaning").textContent="뜻: "+(v.kr||"-");
+}
+
+/* ===== 퀴즈 보기(비슷한 오답) ===== */
+function plausibleEd(s){
+  if(/e$/.test(s)) return s + "d";
+  if(/[bcdfghjklmnpqrstvwxyz]y$/.test(s)) return s.replace(/y$/, "ied");
+  if(/(p|t)$/.test(s)) return s + s.slice(-1) + "ed"; // stop→stopped, cut→cutted(오답 유도)
+  return s + "ed";
+}
+function withT(s){ return s + "t"; }
+function withD(s){ return s + "d"; }
+function makeOptions(v){
+  const correct = {base:v.base, past:v.past, pp:v.pp, ok:true};
+  const d1 = { base:v.base, past:plausibleEd(v.base), pp:plausibleEd(v.base), ok:false };
+  const d2 = { base:v.base, past:withD(v.past),       pp:withD(v.pp),         ok:false };
+  const d3 = { base:v.base, past:withT(v.past),       pp:withT(v.pp),         ok:false };
+  return shuffle([correct, d1, d2, d3]);
+}
+
+/* ===== 퀴즈 진행 ===== */
+function showQuizCard(){
+  const box=$("#opts"); box.innerHTML="";
+  if(!currentSet.length){ $("#qBase").textContent="(빈 세트)"; return; }
+  if(qi>=currentSet.length){ finishQuiz(); return; }
+  const v=currentSet[qi];
+  $("#qBase").textContent=v.base;
+  makeOptions(v).forEach(o=>{
+    const d=document.createElement("div");
+    d.className="opt";
+    d.innerHTML=`<div class="t">${o.base} – ${o.past} – ${o.pp}</div>`;
+    d.onclick=()=>{
+      stopAllAudio();
+      if(o.ok){ ok++; playOK(); }
+      else{
+        no++; playNO();
+        if(!wrongList.some(w=>w.base===v.base && w.past===v.past && w.pp===v.pp)) wrongList.push(v);
+        if(!allWrongs.some(w=>w.base===v.base && w.past===v.past && w.pp===v.pp)) allWrongs.push(v);
+      }
+      qi++; updateStats(); showQuizCard();
+    };
+    box.appendChild(d);
+  });
+  updateStats();
+}
+
+function finishQuiz(){
+  stopAllAudio();
+  if(wrongList.length){
+    const retry = confirm(`퀴즈 완료!\n정답 ${ok} · 오답 ${no}\n오답 ${wrongList.length}개를 다시 풀까요?`);
+    if(retry){ startWrongOnlyQuiz(); return; }
+  }
+  const nextAction = confirm("수고하셨습니다! 다음 20개를 학습하시겠습니까?\n[확인] 세트 선택으로 이동 / [취소] 현재 세트 학습 화면");
+  if(nextAction){
+    showPicker();
+  }else{
     setMode("study");
-    iStudy=0; showStudyCard(); updateStats();
-    if(currentSet.length){
-      speakTriple(currentSet[iStudy], parseFloat($("#rate").value), $("#autoNext")?.checked);
+  }
+}
+
+function startQuiz(){
+  qi=0; ok=0; no=0; wrongList=[];
+  setMode("quiz");
+  showQuizCard();
+  updateStats();
+}
+
+function startWrongOnlyQuiz(){
+  if(!wrongList.length){ alert("오답이 없습니다!"); finishQuiz(); return; }
+  currentSet = wrongList.slice();
+  qi=0; ok=0; no=0; wrongList=[];
+  setMode("quiz");
+  showQuizCard();
+  updateStats();
+}
+
+/* ===== 학습 종료 처리 ===== */
+function onStudyComplete(){
+  stopAllAudio();
+  const goQuiz = confirm("수고하셨습니다. 이제 퀴즈를 풀어보세요.\n[확인] 퀴즈 시작  /  [취소] 세트 선택으로 이동");
+  if(goQuiz){
+    startQuiz();
+  }else{
+    showPicker();
+  }
+}
+
+/* ===== 음성 읽기 ===== */
+function speakTriple(v,rate=1.0){
+  stopAllAudio(); // 시작 전 정리
+  const seq=[{el:"#pBase",txt:v.base},{el:"#pPast",txt:v.past},{el:"#pPP",txt:v.pp}];
+  const voices = speechSynthesis.getVoices();
+  const enVoice = voices.find(voice => /en/i.test(voice.lang));
+  let idx=0;
+  const go=()=>{
+    if(idx>=seq.length) return;
+    const {el,txt}=seq[idx];
+    if(!$("#mute").checked){
+      const u=new SpeechSynthesisUtterance(txt);
+      if(enVoice) u.voice = enVoice;
+      u.lang="en-US"; u.rate=rate; u.volume=1.0;
+      u.onstart=()=>{$$(".pill").forEach(p=>p.classList.remove("hl")); $(el).classList.add("hl");};
+      u.onend = ()=>{ $(el).classList.remove("hl"); idx++; go(); };
+      speechSynthesis.speak(u);
+    }else{
+      $$(".pill").forEach(p=>p.classList.remove("hl")); $(el).classList.add("hl");
+      setTimeout(()=>{ $(el).classList.remove("hl"); idx++; go(); }, 200);
     }
+  };
+  if(!voices.length){ setTimeout(go, 100); } else { go(); }
+}
+
+/* ===== 모드 전환 ===== */
+function setMode(m){
+  stopAllAudio();
+  mode=m;
+  if(m==="study"){
+    $("#screenStudy").classList.remove("hidden");
+    $("#screenQuiz").classList.add("hidden");
+    $("#btnModeStudy").classList.add("active"); $("#btnModeStudy").setAttribute("aria-pressed","true");
+    $("#btnModeQuiz").classList.remove("active"); $("#btnModeQuiz").setAttribute("aria-pressed","false");
+    showStudyCard(); updateStats();
+  }else{
+    $("#screenQuiz").classList.remove("hidden");
+    $("#screenStudy").classList.add("hidden");
+    $("#btnModeQuiz").classList.add("active"); $("#btnModeQuiz").setAttribute("aria-pressed","true");
+    $("#btnModeStudy").classList.remove("active"); $("#btnModeStudy").setAttribute("aria-pressed","false");
+    showQuizCard();
+  }
+}
+
+/* ===== 초기화 ===== */
+document.addEventListener("DOMContentLoaded",()=>{
+  document.title = "수브레인 동사변형 학습";
+  buildMasterOnce();
+  // 첫 화면: 세트 선택 모달
+  renderSetPicker();
+  showPicker();
+
+  // 모달 버튼
+  $("#closePicker").addEventListener("click", hidePicker);
+  $("#btnOpenPicker").addEventListener("click", ()=>{ renderSetPicker(); showPicker(); });
+
+  // 기본 세트(선택 전 미리보기 방지): currentSet 비워둠. 세트 선택 시 buildSets 실행.
+
+  // 학습 수동 읽기
+  $("#btnPlay").addEventListener("click", ()=>{ if(currentSet.length) speakTriple(currentSet[iStudy], parseFloat($("#rate").value)||1.0); });
+  $("#btnStop").addEventListener("click", ()=>{ stopAllAudio(); });
+
+  // 다음/이전
+  $("#btnNext").addEventListener("click", ()=>{
+    if(!currentSet.length){ showPicker(); return; }
+    stopAllAudio();
+    iStudy++;
+    if(iStudy >= currentSet.length){ onStudyComplete(); return; }
+    showStudyCard(); updateStats();
+    speakTriple(currentSet[iStudy], parseFloat($("#rate").value)||1.0);
   });
-  on("btnStartQuiz","click",()=>startQuizFresh());
-  on("btnNextSet","click",()=>{ setIndex++; buildSets(); setMode($("#mode")?.value ?? "study"); });
-  on("btnReset","click",()=>{ setIndex=0; buildSets(); setMode("study"); });
-  on("btnWrongOnly","click",()=>{
-    if(!wrongList.length){ alert("오답 없음"); return; }
-    currentSet=shuffle(wrongList.slice()); wrongList=[]; ok=0; no=0; qi=0;
-    setMode("quiz"); showQuizCard(); renderWrongs(); updateStats();
+  $("#btnPrev").addEventListener("click", ()=>{
+    if(!currentSet.length){ showPicker(); return; }
+    stopAllAudio();
+    iStudy = Math.max(iStudy-1, 0);
+    showStudyCard(); updateStats();
+    speakTriple(currentSet[iStudy], parseFloat($("#rate").value)||1.0);
   });
 
-  on("mode","change",(e)=>{
-    setMode(e.target.value);
-    if(e.target.value==="study" && currentSet.length){
-      speakTriple(currentSet[iStudy], parseFloat($("#rate").value), $("#autoNext")?.checked);
-    }
-  });
-  on("setSize","change",()=>{
-    buildSets();
-    setMode($("#mode")?.value ?? "study");
-  });
+  // 모드 버튼
+  $("#btnModeStudy").addEventListener("click", ()=>setMode("study"));
+  $("#btnModeQuiz").addEventListener("click", ()=>setMode("quiz"));
+  $("#btnToStudy").addEventListener("click", ()=>setMode("study"));
 
-  // 단축키
+  // 키보드
   window.addEventListener("keydown",(e)=>{
-    if(e.target.tagName==="INPUT" || e.target.tagName==="SELECT") return;
-    if(e.code==="Space"){ e.preventDefault(); if(speechSynthesis.speaking) speechSynthesis.cancel(); else if(mode==="study") $("#btnPlay")?.click(); }
-    if(e.key==="ArrowRight"){ $("#btnNext")?.click(); }
-    if(e.key==="ArrowLeft"){ $("#btnPrev")?.click(); }
-    if(e.key.toLowerCase()==="q"){ $("#btnStartQuiz")?.click(); }
-    if(e.key.toLowerCase()==="s"){ $("#btnStartStudy")?.click(); }
+    const t=e.target.tagName;
+    if(t==="INPUT" || t==="SELECT" || t==="TEXTAREA" || e.isComposing) return;
+    if(mode==="study"){
+      if(e.key==="ArrowRight"){ e.preventDefault(); $("#btnNext").click(); }
+      if(e.key==="ArrowLeft"){ e.preventDefault(); $("#btnPrev").click(); }
+      if(e.code==="Space"){ e.preventDefault(); $("#btnPlay").click(); }
+    }
+    if(e.key?.toLowerCase()==="q") setMode("quiz");
+    if(e.key?.toLowerCase()==="s") setMode("study");
   });
 });
 </script>
